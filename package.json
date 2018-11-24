@@ -6,7 +6,7 @@
   "author": "fjc0k <fjc0kb@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "dev": "poi dev",
+    "dev": "poi watch",
     "build": "poi build"
   },
   "eslintConfig": {
@@ -18,12 +18,14 @@
   ],
   "devDependencies": {
     "@types/base64-js": "^1.2.5",
-    "@types/js-beautify": "^1.8.0",
+    "@types/clipboard": "^2.0.1",
+    "@types/js-cookie": "^2.2.0",
+    "@types/prismjs": "^1.9.0",
     "@types/qs": "^6.5.1",
     "@types/react": "^16.7.7",
     "@types/react-dom": "^16.0.10",
     "eslint": "^5.9.0",
-    "eslint-config-io": "^0.0.7",
+    "eslint-config-io": "^0.0.8",
     "node-sass": "^4.10.0",
     "poi": "^11.0.0-beta.6",
     "sass-loader": "^7.1.0",
@@ -32,10 +34,13 @@
   },
   "dependencies": {
     "base64-js": "^1.3.0",
-    "js-beautify": "^1.8.8",
+    "clipboard": "^2.0.4",
+    "js-cookie": "^2.2.0",
+    "prismjs": "^1.15.0",
     "qs": "^6.5.2",
     "react": "^16.6.3",
     "react-dom": "^16.6.3",
+    "react-toastify": "^4.4.3",
     "vtils": "^0.59.0"
   }
 }

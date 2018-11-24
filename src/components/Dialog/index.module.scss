@@ -1,0 +1,76 @@
+.dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: all 0.3s;
+
+  &.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba($color: #0d0a31, $alpha: 0.85);
+  }
+
+  .content {
+    position: relative;
+    width: 500px;
+    padding: 30px 56px;
+    color: #333;
+    background: white;
+    border-radius: 5px;
+    z-index: 1;
+
+    .title {
+      font-size: 18px;
+      margin-bottom: 30px;
+      font-weight: bolder;
+      text-align: center;
+    }
+
+    .main {
+      font-size: 16px;
+      pre {
+        width: 100% !important;
+        max-height: 45vh;
+        overflow: auto;
+        &:global(.wrap) {
+          white-space: pre-line;
+        }
+      }
+    }
+
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      text-align: center;
+    }
+
+    .close {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -60px;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 18px;
+      cursor: pointer;
+    }
+  }
+}

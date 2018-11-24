@@ -1,83 +1,104 @@
+import 'prismjs/themes/prism-tomorrow.css'
+import 'react-toastify/dist/ReactToastify.css'
 import React from 'react'
 import ReactDom from 'react-dom'
 import qs from 'qs'
 import base64 from 'base64-js'
-import { request } from 'vtils'
-import { Button } from '../../components'
+import { ToastContainer, toast } from 'react-toastify'
+import Prism from 'prismjs'
+import 'prismjs/components/prism-typescript'
+import { Button, Dialog, Icon, Loading } from '../../components'
+import { fetchProjectInfo, createCdnFiles, fetchFile } from '../../api'
 import styles from './Project.module.scss'
 
-const getProjectDetail = (): Promise<{
-  project: {
-    /** 项目的名称 */
-    name: string,
-    /** 项目的 Font Family */
-    font_family: string,
-    /** 项目的类名前缀 */
-    prefix: string,
-  },
-  icons: Array<{
-    /** 图标类名（不含前缀） */
-    font_class: string,
-    /** 图标的 SVG */
-    show_svg: string,
-    /** 图标的 Unicode 码（10进制表示） */
-    unicode: string,
-  }>,
-  font: {
-    /** TTF 字体文件地址 */
-    ttf_file: string,
-  },
-}> => {
-  return request({
-    url: '//iconfont.cn/api/project/detail.json',
-    data: {
-      pid: qs.parse(location.search).projectId,
-    },
-    requestDataType: 'querystring',
-  }).then(({ data }) => (data as any).data)
-}
+let projectId: number = 0
 
-const Box = class extends React.Component {
+const Box = class extends React.Component<{}, {
+  loadingVisible: boolean,
+  dialogVisible: boolean,
+  dialogTitle: string,
+  dialogCode: string,
+  copyContent: string,
+  }> {
+  public state = {
+    loadingVisible: false,
+    dialogVisible: false,
+    dialogTitle: '',
+    dialogCode: '',
+    copyContent: '',
+  }
+
   private genTypes = () => {
-    getProjectDetail().then(data => {
-      const type = data.icons.reduce((res, icon) => {
+    this.setState({
+      loadingVisible: true,
+    })
+    fetchProjectInfo({ id: projectId }).then(({ project, icons }) => {
+      const type = icons.reduce((res, icon) => {
         res.push(`'${icon.font_class}'`)
         return res
       }, []).join(' | ')
-      console.log(type)
+      this.setState({
+        loadingVisible: false,
+        dialogVisible: true,
+        dialogTitle: `项目 “${project.name}” 的 TypeScript 类型`,
+        dialogCode: `<pre class="language-typescript wrap">${Prism.highlight(type, Prism.languages.typescript)}</pre>`,
+        copyContent: type,
+      })
     })
   }
 
   private genWeappCss = () => {
-    getProjectDetail().then(({ project, font, icons }) => {
-      request({
-        url: font.ttf_file,
-        responseDataType: 'arraybuffer',
-      }).then(({ data }) => {
-        const base64String = base64.fromByteArray(new Uint8Array(data))
-        const base64UrlString = `data:font/truetype;charset=utf-8;base64,${base64String}`
-        const css = `
-          @font-face {
-            font-family: "${project.font_family}";
-            src: url("${base64UrlString}") format("truetype");
-          }
+    this.setState({
+      loadingVisible: true,
+    })
+    createCdnFiles({ id: projectId }).then(() => {
+      fetchProjectInfo({ id: projectId }).then(({ project, font, icons }) => {
+        fetchFile({ url: font.ttf_file }).then(file => {
+          const base64String = base64.fromByteArray(new Uint8Array(file))
+          const base64UrlString = `data:font/truetype;charset=utf-8;base64,${base64String}`
+          const css = `
+            @font-face {
+              font-family: "${project.font_family}";
+              src: url("${base64UrlString}") format("truetype");
+            }
 
-          .${project.font_family} {
-            font-family: "${project.font_family}" !important;
-            font-size: 1em;
-            font-style: normal;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-          }
+            .${project.font_family} {
+              font-family: "${project.font_family}" !important;
+              font-size: 1em;
+              font-style: normal;
+              -webkit-font-smoothing: antialiased;
+              -moz-osx-font-smoothing: grayscale;
+            }
 
-          ${(
-            icons
-              .map(icon => `.${project.prefix}-${icon.font_class}:before {\n  content: "\\${Number(icon.unicode).toString(16)}";\n}`)
-              .join('\n\n')
-          )}
-        `.replace(/ {10}| {14}/g, '').trim()
-        console.log(css)
+            ${(
+              icons
+                .map(icon => `.${project.prefix}-${icon.font_class}:before {\n  content: "\\${Number(icon.unicode).toString(16)}";\n}`)
+                .join('\n\n')
+            )}
+          `.replace(/ {12}/g, '').trim()
+          this.setState({
+            loadingVisible: false,
+            dialogVisible: true,
+            dialogTitle: `项目 “${project.name}” 的小程序 CSS`,
+            dialogCode: `<pre class="language-css">${Prism.highlight(css, Prism.languages.css)}</pre>`,
+            copyContent: css,
+          })
+        })
       })
+    })
+  }
+
+  private copySuccess = () => {
+    toast.success('复制代码成功！', {
+      position: toast.POSITION.TOP_CENTER,
+      autoClose: 3000,
+    })
+  }
+
+  private copyError = () => {
+    toast.error('复制代码失败！', {
+      position: toast.POSITION.TOP_CENTER,
+      autoClose: 3000,
     })
   }
 
@@ -86,15 +107,32 @@ const Box = class extends React.Component {
       <div className={styles.box}>
         <div className={styles.body}>
           <Button onClick={this.genTypes}>
-            生成 Typescript 类型
+            <Icon name='typescript' /> 生成 Typescript 类型
           </Button>
           <Button onClick={this.genWeappCss}>
-            生成小程序 CSS
+            <Icon name='weapp' /> 生成小程序 CSS
           </Button>
         </div>
         <div className={styles.footer}>
           打赏一个包子~
         </div>
+        <Loading visible={this.state.loadingVisible} />
+        <Dialog
+          title={this.state.dialogTitle}
+          footer={
+            <Button
+              copyEnable={true}
+              copyContent={this.state.copyContent}
+              onCopySuccess={this.copySuccess}
+              onCopyError={this.copyError}>
+              复制代码
+            </Button>
+          }
+          visible={this.state.dialogVisible}
+          onVisibleChange={dialogVisible => this.setState({ dialogVisible })}>
+          <div dangerouslySetInnerHTML={{ __html: this.state.dialogCode }} />
+        </Dialog>
+        <ToastContainer />
       </div>
     )
   }
@@ -102,6 +140,7 @@ const Box = class extends React.Component {
 
 window.addEventListener('load', () => {
   new MutationObserver(() => {
+    projectId = Number(qs.parse(location.search).projectId)
     const el = document.querySelector(`.${styles.popup}`) as HTMLDivElement
     if (document.querySelector('.project-iconlist')) {
       if (!el) {

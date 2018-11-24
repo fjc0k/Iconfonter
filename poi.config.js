@@ -8,7 +8,8 @@ module.exports = {
   filenameHash: false,
   sourceMap: false,
   filenames: {
-    chunk: 'assets/js/Common.js',
+    js: 'assets/[name].js',
+    css: 'assets/[name].css',
+    chunk: 'assets/Common.js',
   },
-  chainWebpack: () => {},
 }

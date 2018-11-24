@@ -1,8 +1,9 @@
 .popup {
   position: fixed;
-  bottom: 10px;
+  bottom: 20px;
   left: 0;
   right: 0;
+  z-index: 1000;
 
   .box {
     width: 500px;
@@ -14,7 +15,7 @@
 
     .body {
       text-align: center;
-      margin: 15px;
+      margin: 40px 0;
     }
 
     .footer {

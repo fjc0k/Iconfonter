@@ -15,8 +15,8 @@
   "content_scripts": [
     {
       "matches": ["*://iconfont.cn/manage/index*"],
-      "js": ["assets/js/Common.js", "assets/js/ManageProject.js"],
-      "css": ["assets/css/ManageProject.css"]
+      "js": ["assets/Common.js", "assets/ManageProject.js"],
+      "css": ["assets/Common.css", "assets/ManageProject.css"]
     }
   ]
 }
