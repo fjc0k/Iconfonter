@@ -1,0 +1,22 @@
+{
+  "name": "Iconfonter",
+  "description": "Iconfonter",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "icons": {
+    "128": "logo.png"
+  },
+  "permissions": [
+    "http://at.alicdn.com/",
+    "https://at.alicdn.com/",
+    "http://iconfont.cn/",
+    "https://iconfont.cn/"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://iconfont.cn/manage/index*"],
+      "js": ["assets/js/Common.js", "assets/js/ManageProject.js"],
+      "css": ["assets/css/ManageProject.css"]
+    }
+  ]
+}
