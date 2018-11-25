@@ -107,19 +107,16 @@ const Box = class extends React.Component<{}, {
       <div className={styles.box}>
         <div className={styles.body}>
           <Button className={styles.button} onClick={this.genTypes}>
-            <Icon name='typescript' /> 生成 Typescript 类型
+            <Icon name='typescript' /> 生成图标类名的 Typescript 定义
           </Button>
           <Button className={styles.button} onClick={this.genWeappCss}>
-            <Icon name='weapp' /> 生成小程序 CSS
+            <Icon name='weapp' /> 生成小程序专用的 CSS
           </Button>
           <Button className={styles.button} onClick={this.genWeappCss}>
-            <Icon name='pack' /> 打包 SVG 图片
+            <Icon name='ie' /> 生成兼容 IE8 的 CSS
           </Button>
           <Button className={styles.button} onClick={this.genWeappCss}>
-            <Icon name='pack' /> 打包 SVG 图片
-          </Button>
-          <Button className={styles.button} onClick={this.genWeappCss}>
-            <Icon name='pack' /> 打包 SVG 图片
+            <Icon name='pack' /> 打包 SVG 图标下载
           </Button>
         </div>
         <div className={styles.footer}>
