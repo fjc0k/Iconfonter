@@ -9,6 +9,7 @@ export default class Button extends React.Component<{
   onCopySuccess?: () => any,
   onCopyError?: () => any,
   onClick?: () => any,
+  className?: string,
   }> {
   public static defaultProps = {
     copyEnable: false,
@@ -38,7 +39,7 @@ export default class Button extends React.Component<{
 
   public render() {
     return (
-      <div className={styles.button} onClick={this.props.onClick} ref={this.targetRef}>
+      <div className={`${styles.button} ${this.props.className}`} onClick={this.props.onClick} ref={this.targetRef}>
         {this.props.children}
       </div>
     )

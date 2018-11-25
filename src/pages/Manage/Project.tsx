@@ -89,16 +89,16 @@ const Box = class extends React.Component<{}, {
   }
 
   private copySuccess = () => {
-    toast.success('复制代码成功！', {
+    toast.success('代码复制成功！', {
       position: toast.POSITION.TOP_CENTER,
-      autoClose: 3000,
+      autoClose: 1500,
     })
   }
 
   private copyError = () => {
-    toast.error('复制代码失败！', {
+    toast.error('代码复制失败！', {
       position: toast.POSITION.TOP_CENTER,
-      autoClose: 3000,
+      autoClose: 1500,
     })
   }
 
@@ -106,15 +106,29 @@ const Box = class extends React.Component<{}, {
     return (
       <div className={styles.box}>
         <div className={styles.body}>
-          <Button onClick={this.genTypes}>
+          <Button className={styles.button} onClick={this.genTypes}>
             <Icon name='typescript' /> 生成 Typescript 类型
           </Button>
-          <Button onClick={this.genWeappCss}>
+          <Button className={styles.button} onClick={this.genWeappCss}>
             <Icon name='weapp' /> 生成小程序 CSS
+          </Button>
+          <Button className={styles.button} onClick={this.genWeappCss}>
+            <Icon name='pack' /> 打包 SVG 图片
+          </Button>
+          <Button className={styles.button} onClick={this.genWeappCss}>
+            <Icon name='pack' /> 打包 SVG 图片
+          </Button>
+          <Button className={styles.button} onClick={this.genWeappCss}>
+            <Icon name='pack' /> 打包 SVG 图片
           </Button>
         </div>
         <div className={styles.footer}>
-          打赏一个包子~
+          <span className={styles.link}>
+            <Icon name='github' /> 提建议
+          </span>
+          <span className={styles.link}>
+            <Icon name='good' /> 打赏作者
+          </span>
         </div>
         <Loading visible={this.state.loadingVisible} />
         <Dialog
@@ -141,11 +155,11 @@ const Box = class extends React.Component<{}, {
 window.addEventListener('load', () => {
   new MutationObserver(() => {
     projectId = Number(qs.parse(location.search).projectId)
-    const el = document.querySelector(`.${styles.popup}`) as HTMLDivElement
+    const el = document.querySelector(`.${styles.dock}`) as HTMLDivElement
     if (document.querySelector('.project-iconlist')) {
       if (!el) {
         const _el = document.createElement('div')
-        _el.className = styles.popup
+        _el.className = styles.dock
         document.body.appendChild(_el)
         ReactDom.render(<Box />, _el)
       } else {
