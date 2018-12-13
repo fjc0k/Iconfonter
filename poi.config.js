@@ -12,4 +12,15 @@ module.exports = {
     css: 'assets/[name].css',
     chunk: 'assets/Common.js',
   },
+  css: {
+    loaderOptions: {
+      less: {
+        javascriptEnabled: true,
+        // https://github.com/ant-design/ant-design/blob/master/components/style/themes/default.less
+        modifyVars: {
+          'primary-color': 'red',
+        },
+      },
+    },
+  },
 }

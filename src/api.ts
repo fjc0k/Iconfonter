@@ -48,6 +48,8 @@ export function fetchProjectInfo({ id }: { id: number }): Promise<{
   font: {
     /** TTF 字体文件地址 */
     ttf_file: string,
+    /** WOFF 字体文件地址 */
+    woff_file: string,
   },
 }> {
   return request({

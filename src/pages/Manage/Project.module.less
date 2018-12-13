@@ -1,0 +1,41 @@
+@import '../../settings.less';
+
+:global {
+  .project-iconlist {
+    display: flex;
+    .block-icon-list {
+      flex-grow: 1;
+      + * {
+        flex-shrink: 0;
+      }
+    }
+  }
+  .ant-dropdown-button {
+    display: flex;
+    > .ant-btn:first-child {
+      flex-grow: 1;
+    }
+  }
+  *[class^="ant-"], *[class*=" ant-"] {
+    box-sizing: border-box;
+  }
+}
+
+.forger {
+  background: #eee;
+  padding: 12px;
+  border-radius: 4px;
+  .actions {
+    display: flex;
+    flex-direction: column;
+    .action {
+      &:not(:first-child) {
+        margin-top: 8px;
+      }
+      .icon {
+        margin-right: 4px;
+      }
+    }
+    .action
+  }
+}

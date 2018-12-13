@@ -1,8 +1,8 @@
 import React from 'react'
-import Icon from '../Icon'
-import styles from './index.module.scss'
+import XIcon from '../Icon'
+import _ from './index.module.less'
 
-export default class Dialog extends React.Component<{
+export default class XDialog extends React.Component<{
   visible: boolean,
   title: string,
   footer?: React.ReactNode,
@@ -15,20 +15,20 @@ export default class Dialog extends React.Component<{
 
   public render() {
     return (
-      <div className={`${styles.dialog} ${this.props.visible ? '' : styles.hidden}`}>
-        <div className={styles.mask} onClick={this.toggle} />
-        <div className={styles.content}>
-          <div className={styles.title}>
+      <div className={`${_.dialog} ${this.props.visible ? '' : _.hidden}`}>
+        <div className={_.mask} onClick={this.toggle} />
+        <div className={_.content}>
+          <div className={_.title}>
             {this.props.title}
           </div>
-          <div className={styles.main}>
+          <div className={_.main}>
             {this.props.children}
           </div>
-          <div className={styles.footer}>
+          <div className={_.footer}>
             {this.props.footer}
           </div>
-          <Icon
-            className={styles.close}
+          <XIcon
+            className={_.close}
             name='close'
             onClick={this.toggle}
           />

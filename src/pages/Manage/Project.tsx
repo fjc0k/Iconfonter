@@ -1,149 +1,209 @@
+import 'antd/lib/style/components.less'
 import 'prismjs/themes/prism-tomorrow.css'
-import 'react-toastify/dist/ReactToastify.css'
-import React from 'react'
-import ReactDom from 'react-dom'
 import qs from 'qs'
 import base64 from 'base64-js'
-import { ToastContainer, toast } from 'react-toastify'
+import React from 'react'
+import ReactDom from 'react-dom'
+import CopyToClipboard from 'react-copy-to-clipboard'
+import { Button, Dropdown, Menu, Radio, Spin, message } from 'antd'
+import { storage } from 'vtils'
 import Prism from 'prismjs'
 import 'prismjs/components/prism-typescript'
-import { Button, Dialog, Icon, Loading } from '../../components'
+import { XIcon, XDialog } from '../../components'
 import { fetchProjectInfo, createCdnFiles, fetchFile } from '../../api'
-import styles from './Project.module.scss'
+import _ from './Project.module.less'
 
-let projectId: number = 0
+interface ForgerProps {
+  projectId: number,
+}
 
-const Box = class extends React.Component<{}, {
-  loadingVisible: boolean,
-  dialogVisible: boolean,
-  dialogTitle: string,
-  dialogCode: string,
-  copyContent: string,
-  }> {
-  public state = {
-    loadingVisible: false,
-    dialogVisible: false,
-    dialogTitle: '',
-    dialogCode: '',
-    copyContent: '',
+interface ForgerState {
+  loading: boolean,
+  dialog: {
+    visible: boolean,
+    title: string,
+    code: string,
+    html: string,
+  },
+  options: {
+    ts: {
+      withPrefix: boolean,
+    },
+  },
+}
+
+class Forger extends React.Component<ForgerProps, ForgerState> {
+  constructor(props: Forger['props']) {
+    super(props)
+    this.state = {
+      loading: false,
+      dialog: {
+        visible: false,
+        title: '',
+        code: '',
+        html: '',
+      },
+      options: storage.get(_.forger, {
+        ts: {
+          withPrefix: false,
+        },
+      }),
+    }
   }
 
-  private genTypes = () => {
-    this.setState({
-      loadingVisible: true,
-    })
-    fetchProjectInfo({ id: projectId }).then(({ project, icons }) => {
-      const type = icons.reduce((res, icon) => {
-        res.push(`'${icon.font_class}'`)
-        return res
-      }, []).join(' | ')
-      this.setState({
-        loadingVisible: false,
-        dialogVisible: true,
-        dialogTitle: `项目 “${project.name}” 的 TypeScript 类型`,
-        dialogCode: `<pre class="language-typescript wrap">${Prism.highlight(type, Prism.languages.typescript)}</pre>`,
-        copyContent: type,
+  toggleOption = <
+    Options extends keyof ForgerState['options'],
+    Key extends keyof ForgerState['options'][Options],
+  >(options: Options, key: Key, value: ForgerState['options'][Options][Key]): void => {
+    this.setState(
+      prevState => {
+        prevState.options[options][key] = value
+        return prevState
+      },
+      () => {
+        storage.set(_.forger, this.state.options)
+      }
+    )
+  }
+
+  generateTSDefinition = () => {
+    const { projectId: id } = this.props
+    const { ts } = this.state.options
+    this.setState({ loading: true })
+    fetchProjectInfo({ id })
+      .then(projectInfo => {
+        return projectInfo.icons.map(
+          icon => `'${ts.withPrefix ? `${projectInfo.project.prefix}-` : ''}${icon.font_class}'`
+        ).join(' | ')
       })
-    })
-  }
-
-  private genWeappCss = () => {
-    this.setState({
-      loadingVisible: true,
-    })
-    createCdnFiles({ id: projectId }).then(() => {
-      fetchProjectInfo({ id: projectId }).then(({ project, font, icons }) => {
-        fetchFile({ url: font.ttf_file }).then(file => {
-          const base64String = base64.fromByteArray(new Uint8Array(file))
-          const base64UrlString = `data:font/truetype;charset=utf-8;base64,${base64String}`
-          const css = `
-            @font-face {
-              font-family: "${project.font_family}";
-              src: url("${base64UrlString}") format("truetype");
-            }
-
-            .${project.font_family} {
-              font-family: "${project.font_family}" !important;
-              font-size: 1em;
-              font-style: normal;
-              -webkit-font-smoothing: antialiased;
-              -moz-osx-font-smoothing: grayscale;
-            }
-
-            ${(
-              icons
-                .map(icon => `.${project.prefix}-${icon.font_class}:before {\n  content: "\\${Number(icon.unicode).toString(16)}";\n}`)
-                .join('\n\n')
-            )}
-          `.replace(/ {12}/g, '').trim()
-          this.setState({
-            loadingVisible: false,
-            dialogVisible: true,
-            dialogTitle: `项目 “${project.name}” 的小程序 CSS`,
-            dialogCode: `<pre class="language-css">${Prism.highlight(css, Prism.languages.css)}</pre>`,
-            copyContent: css,
-          })
+      .then(definition => {
+        this.setState({
+          dialog: {
+            visible: true,
+            title: 'TypeScript 定义',
+            code: definition,
+            html: `
+              <pre class="language-typescript wrap">${
+                Prism.highlight(definition, Prism.languages.typescript)
+              }</pre>
+            `,
+          },
         })
       })
-    })
+      .finally(() => {
+        (document.activeElement as HTMLButtonElement).blur()
+        this.setState({ loading: false })
+      })
   }
 
-  private copySuccess = () => {
-    toast.success('代码复制成功！', {
-      position: toast.POSITION.TOP_CENTER,
-      autoClose: 1500,
-    })
-  }
-
-  private copyError = () => {
-    toast.error('代码复制失败！', {
-      position: toast.POSITION.TOP_CENTER,
-      autoClose: 1500,
-    })
-  }
-
-  public render() {
-    return (
-      <div className={styles.box}>
-        <div className={styles.body}>
-          <Button className={styles.button} onClick={this.genTypes}>
-            <Icon name='typescript' /> 生成图标类名的 Typescript 定义
-          </Button>
-          <Button className={styles.button} onClick={this.genWeappCss}>
-            <Icon name='weapp' /> 生成小程序专用的 CSS
-          </Button>
-          <Button className={styles.button} onClick={this.genWeappCss}>
-            <Icon name='ie' /> 生成兼容 IE8 的 CSS
-          </Button>
-          <Button className={styles.button} onClick={this.genWeappCss}>
-            <Icon name='pack' /> 打包 SVG 图标下载
-          </Button>
-        </div>
-        <div className={styles.footer}>
-          <span className={styles.link}>
-            <Icon name='github' /> 提建议
-          </span>
-          <span className={styles.link}>
-            <Icon name='good' /> 打赏作者
-          </span>
-        </div>
-        <Loading visible={this.state.loadingVisible} />
-        <Dialog
-          title={this.state.dialogTitle}
-          footer={
-            <Button
-              copyEnable={true}
-              copyContent={this.state.copyContent}
-              onCopySuccess={this.copySuccess}
-              onCopyError={this.copyError}>
-              复制代码
-            </Button>
+  generateWeappCSS = () => {
+    const { projectId: id } = this.props
+    this.setState({ loading: true })
+    createCdnFiles({ id })
+      .then(() => fetchProjectInfo({ id }))
+      .then(projectInfo => Promise.all([
+        Promise.resolve(projectInfo),
+        fetchFile({ url: projectInfo.font.woff_file }),
+      ]))
+      .then(([{ project, icons }, file]) => {
+        const base64String = base64.fromByteArray(new Uint8Array(file))
+        const base64UrlString = `data:font/woff;charset=utf-8;base64,${base64String}`
+        return `
+          @font-face {
+            font-family: "${project.font_family}";
+            src: url("${base64UrlString}") format("woff");
           }
-          visible={this.state.dialogVisible}
-          onVisibleChange={dialogVisible => this.setState({ dialogVisible })}>
-          <div dangerouslySetInnerHTML={{ __html: this.state.dialogCode }} />
-        </Dialog>
-        <ToastContainer />
+
+          .${project.font_family} {
+            font-family: "${project.font_family}" !important;
+            font-size: 1em;
+            font-style: normal;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+          }
+
+          ${(
+            icons
+              .map(icon => `.${project.prefix}-${icon.font_class}:before {\n  content: "\\${Number(icon.unicode).toString(16)}";\n}`)
+              .join('\n\n')
+          )}
+        `.replace(/ {9}/g, '').trim()
+      })
+      .then(css => {
+        this.setState({
+          dialog: {
+            visible: true,
+            title: '小程序 CSS',
+            code: css,
+            html: `
+              <pre class="language-typescript">${
+                Prism.highlight(css, Prism.languages.css)
+              }</pre>
+            `,
+          },
+        })
+      })
+      .finally(() => {
+        (document.activeElement as HTMLButtonElement).blur()
+        this.setState({ loading: false })
+      })
+  }
+
+  closeDialog = () => {
+    this.setState(prevState => {
+      prevState.dialog.visible = false
+      return prevState
+    })
+  }
+
+  render() {
+    const { options: { ts }, dialog } = this.state
+    return (
+      <div>
+        <Spin spinning={this.state.loading}>
+          <div>
+            <div className={_.actions}>
+              <Dropdown.Button
+                className={_.action}
+                trigger={['click']}
+                onClick={this.generateTSDefinition}
+                overlay={(
+                  <Menu>
+                    <Menu.Item key='1' onClick={() => this.toggleOption('ts', 'withPrefix', false)}>
+                      <Radio checked={!ts.withPrefix}>
+                        图标名不带前缀
+                      </Radio>
+                    </Menu.Item>
+                    <Menu.Item key='2' onClick={() => this.toggleOption('ts', 'withPrefix', true)}>
+                      <Radio checked={ts.withPrefix}>
+                        图标名带前缀
+                      </Radio>
+                    </Menu.Item>
+                  </Menu>
+                )}>
+                <XIcon name='typescript' className={_.icon} />
+                生成图标名称的 TS 定义
+              </Dropdown.Button>
+              <Button className={_.action} onClick={this.generateWeappCSS}>
+                <XIcon name='weapp' className={_.icon} />
+                生成小程序 CSS
+              </Button>
+            </div>
+          </div>
+        </Spin>
+        <XDialog
+          title={dialog.title}
+          visible={dialog.visible}
+          onVisibleChange={this.closeDialog}
+          footer={
+            <CopyToClipboard
+              text={dialog.code}
+              onCopy={() => message.success('代码复制成功')}>
+              <Button>复制代码</Button>
+            </CopyToClipboard>
+          }>
+          <div dangerouslySetInnerHTML={{ __html: dialog.html }} />
+        </XDialog>
       </div>
     )
   }
@@ -151,20 +211,24 @@ const Box = class extends React.Component<{}, {
 
 window.addEventListener('load', () => {
   new MutationObserver(() => {
-    projectId = Number(qs.parse(location.search).projectId)
-    const el = document.querySelector(`.${styles.dock}`) as HTMLDivElement
-    if (document.querySelector('.project-iconlist')) {
-      if (!el) {
-        const _el = document.createElement('div')
-        _el.className = styles.dock
-        document.body.appendChild(_el)
-        ReactDom.render(<Box />, _el)
+    const projectId = Number(qs.parse(location.search).projectId)
+    const forgerEl = document.querySelector<HTMLDivElement>(`.${_.forger}`)
+    const listEl = document.querySelector<HTMLDivElement>('.project-iconlist')
+    if (listEl) {
+      if (!forgerEl) {
+        const _forgerEl = document.createElement('div')
+        _forgerEl.className = _.forger
+        listEl.appendChild(_forgerEl)
+        ReactDom.render(
+          <Forger projectId={projectId} />,
+          _forgerEl
+        )
       } else {
-        el.style.display = 'block'
+        forgerEl.style.display = 'block'
       }
     } else {
-      if (el) {
-        el.style.display = 'none'
+      if (forgerEl) {
+        forgerEl.style.display = 'none'
       }
     }
   }).observe(document, {
