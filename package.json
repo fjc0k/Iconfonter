@@ -7,7 +7,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "poi watch",
-    "build": "poi build"
+    "build": "poi build && bestzip iconfonter.zip dist/*",
+    "release": "standard-version -a && yarn build && git push --follow-tags origin master"
   },
   "eslintConfig": {
     "root": true,
@@ -24,11 +25,13 @@
     "@types/react": "^16.7.7",
     "@types/react-copy-to-clipboard": "^4.2.6",
     "@types/react-dom": "^16.0.10",
+    "bestzip": "^2.1.2",
     "eslint": "^5.9.0",
     "eslint-config-io": "^0.0.9",
     "less": "^3.9.0",
     "less-loader": "^4.1.0",
     "poi": "^11.0.0-beta.6",
+    "standard-version": "^4.4.0",
     "typescript": "^3.1.6",
     "uglifyjs-webpack-plugin": "^2.0.1"
   },

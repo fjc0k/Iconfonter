@@ -2,7 +2,7 @@ import cookie from 'js-cookie'
 import { request as baseRequest, isPlainObject } from 'vtils'
 import { RequestOptions } from 'vtils/lib/request'
 
-const baseUrl = 'http://iconfont.cn/api/'
+const baseUrl = '/api/'
 
 const request = (options: {
   url: string,

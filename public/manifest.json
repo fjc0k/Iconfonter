@@ -9,12 +9,12 @@
   "permissions": [
     "http://at.alicdn.com/",
     "https://at.alicdn.com/",
-    "http://iconfont.cn/",
-    "https://iconfont.cn/"
+    "http://*.iconfont.cn/",
+    "https://*.iconfont.cn/"
   ],
   "content_scripts": [
     {
-      "matches": ["*://iconfont.cn/manage/index*"],
+      "matches": ["*://*.iconfont.cn/manage/index*"],
       "js": ["assets/Common.js", "assets/ManageProject.js"],
       "css": ["assets/Common.css", "assets/ManageProject.css"]
     }
