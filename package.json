@@ -8,7 +8,12 @@
   "scripts": {
     "dev": "poi watch",
     "build": "poi build && bestzip iconfonter.zip dist/*",
-    "release": "standard-version -a && yarn build && git push --follow-tags origin master"
+    "release": "standard-version -a && git push --follow-tags origin master"
+  },
+  "standard-version": {
+    "scripts": {
+      "postbump": "ts-node scripts/updateVersion.ts && yarn build && git add -A"
+    }
   },
   "eslintConfig": {
     "root": true,
@@ -20,6 +25,7 @@
   "devDependencies": {
     "@types/base64-js": "^1.2.5",
     "@types/file-saver": "^2.0.0",
+    "@types/fs-extra": "^5.0.4",
     "@types/js-cookie": "^2.2.0",
     "@types/jszip": "^3.1.4",
     "@types/prismjs": "^1.9.0",
@@ -30,10 +36,12 @@
     "bestzip": "^2.1.2",
     "eslint": "^5.9.0",
     "eslint-config-io": "^0.0.9",
+    "fs-extra": "^7.0.1",
     "less": "^3.9.0",
     "less-loader": "^4.1.0",
     "poi": "^11.0.0-beta.6",
     "standard-version": "^4.4.0",
+    "ts-node": "^7.0.1",
     "typescript": "^3.1.6",
     "uglifyjs-webpack-plugin": "^2.0.1"
   },

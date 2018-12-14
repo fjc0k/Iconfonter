@@ -1,7 +1,7 @@
 {
   "name": "Iconfonter",
   "description": "iconfont.cn 辅助工具，支持生成项目图标名称的 TypeScript 类型定义以及一键生成小程序 CSS。",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "manifest_version": 2,
   "icons": {
     "128": "logo.png"
@@ -14,9 +14,17 @@
   ],
   "content_scripts": [
     {
-      "matches": ["*://*.iconfont.cn/manage/index*"],
-      "js": ["assets/Common.js", "assets/ManageProject.js"],
-      "css": ["assets/Common.css", "assets/ManageProject.css"]
+      "matches": [
+        "*://*.iconfont.cn/manage/index*"
+      ],
+      "js": [
+        "assets/Common.js",
+        "assets/ManageProject.js"
+      ],
+      "css": [
+        "assets/Common.css",
+        "assets/ManageProject.css"
+      ]
     }
   ]
 }
