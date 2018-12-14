@@ -5,6 +5,8 @@ import base64 from 'base64-js'
 import React from 'react'
 import ReactDom from 'react-dom'
 import CopyToClipboard from 'react-copy-to-clipboard'
+import JSZip from 'jszip'
+import FileSaver from 'file-saver'
 import { Button, Dropdown, Menu, Radio, Spin, message } from 'antd'
 import { storage } from 'vtils'
 import Prism from 'prismjs'
@@ -29,6 +31,9 @@ interface ForgerState {
     ts: {
       withPrefix: boolean,
     },
+    svgZip: {
+      withPrefix: boolean,
+    },
   },
 }
 
@@ -43,11 +48,15 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         code: '',
         html: '',
       },
-      options: storage.get(_.forger, {
+      options: {
         ts: {
           withPrefix: false,
         },
-      }),
+        svgZip: {
+          withPrefix: false,
+        },
+        ...storage.get(_.forger, {}),
+      },
     }
   }
 
@@ -149,6 +158,36 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
       })
   }
 
+  generateSVGZip = () => {
+    const { projectId: id } = this.props
+    const { svgZip } = this.state.options
+    this.setState({ loading: true })
+    fetchProjectInfo({ id })
+      .then(({ project, icons }) => {
+        const zip = new JSZip()
+        icons.forEach(icon => {
+          const fileName = `${svgZip.withPrefix ? `${project.prefix}-` : ''}${icon.font_class}.svg`
+          const fileContent = `
+            <?xml version="1.0" standalone="no"?>
+            <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+            ${icon.show_svg}
+          `.replace(/ {11}/g, '').trim()
+          zip.file(fileName, fileContent)
+        })
+        return Promise.all([
+          Promise.resolve(project),
+          zip.generateAsync({ type: 'blob' }),
+        ])
+      })
+      .then(([project, zip]) => {
+        FileSaver.saveAs(zip, `${project.name}(SVG).zip`)
+      })
+      .finally(() => {
+        (document.activeElement as HTMLButtonElement).blur()
+        this.setState({ loading: false })
+      })
+  }
+
   closeDialog = () => {
     this.setState(prevState => {
       prevState.dialog.visible = false
@@ -157,7 +196,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
   }
 
   render() {
-    const { options: { ts }, dialog } = this.state
+    const { options: { ts, svgZip }, dialog } = this.state
     return (
       <div>
         <Spin spinning={this.state.loading}>
@@ -188,6 +227,31 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
                 <XIcon name='weapp' className={_.icon} />
                 生成小程序 CSS
               </Button>
+              <Dropdown.Button
+                className={_.action}
+                trigger={['click']}
+                onClick={this.generateSVGZip}
+                overlay={(
+                  <Menu>
+                    <Menu.Item key='1' onClick={() => this.toggleOption('svgZip', 'withPrefix', false)}>
+                      <Radio checked={!svgZip.withPrefix}>
+                        图标文件名不带前缀
+                      </Radio>
+                    </Menu.Item>
+                    <Menu.Item key='2' onClick={() => this.toggleOption('svgZip', 'withPrefix', true)}>
+                      <Radio checked={svgZip.withPrefix}>
+                        图标文件名带前缀
+                      </Radio>
+                    </Menu.Item>
+                  </Menu>
+                )}>
+                <XIcon name='pack' className={_.icon} />
+                打包下载 SVG 图标
+              </Dropdown.Button>
+              {/* <Button className={_.action} onClick={this.generateWeappCSS}>
+                <XIcon name='weapp' className={_.icon} />
+                生成 React SVG 图标组件
+              </Button> */}
             </div>
           </div>
         </Spin>
