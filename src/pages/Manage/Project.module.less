@@ -10,12 +10,6 @@
       }
     }
   }
-  .ant-dropdown-button {
-    display: flex;
-    > .ant-btn:first-child {
-      flex-grow: 1;
-    }
-  }
   *[class^="ant-"], *[class*=" ant-"] {
     box-sizing: border-box;
   }
@@ -27,19 +21,27 @@
 
 .forger {
   background: #eee;
-  padding: 12px;
+  padding: 14px;
   border-radius: 4px;
   .actions {
     display: flex;
     flex-direction: column;
+    padding: 2px;
     .action {
+      text-align: left;
       &:not(:first-child) {
-        margin-top: 8px;
+        margin-top: 15px;
+      }
+      &:global(.ant-dropdown-button) {
+        display: flex;
+        > :global(.ant-btn):first-child {
+          flex-grow: 1;
+          text-align: left;
+        }
       }
       .icon {
         margin-right: 4px;
       }
     }
-    .action
   }
 }

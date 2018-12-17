@@ -1,0 +1,38 @@
+@import '../../settings.less';
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+}
+
+.button {
+  flex-grow: 1;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 20px;
+  height: 32px;
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  box-sizing: border-box;
+  color: #333;
+  background-color: white;
+  border-radius: 3px;
+  &:hover, &:active {
+    background-color: @primary-color;
+    color: white;
+  }
+  .icon {
+    margin-right: 6px;
+    font-size: 1.1em;
+  }
+}
+
+.right {
+  flex-shrink: 0;
+  margin: 0 6px;
+  padding: 4px;
+  cursor: pointer;
+}

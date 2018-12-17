@@ -7,12 +7,13 @@ import ReactDom from 'react-dom'
 import CopyToClipboard from 'react-copy-to-clipboard'
 import JSZip from 'jszip'
 import FileSaver from 'file-saver'
-import { Button, Dropdown, Menu, Radio, Spin, message } from 'antd'
+import { Button, Spin, message } from 'antd'
 import { storage } from 'vtils'
 import Prism from 'prismjs'
 import 'prismjs/components/prism-typescript'
-import { XIcon, XDialog } from '../../components'
+import { XDialog, XButton, XConfig } from '../../components'
 import { fetchProjectInfo, createCdnFiles, fetchFile } from '../../api'
+import { ConfigOptions } from '../../components/Config'
 import _ from './Project.module.less'
 
 interface ForgerProps {
@@ -27,7 +28,7 @@ interface ForgerState {
     code: string,
     html: string,
   },
-  options: {
+  config: {
     ts: {
       withPrefix: boolean,
     },
@@ -48,7 +49,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         code: '',
         html: '',
       },
-      options: {
+      config: {
         ts: {
           withPrefix: false,
         },
@@ -60,24 +61,24 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
     }
   }
 
-  toggleOption = <
-    Options extends keyof ForgerState['options'],
-    Key extends keyof ForgerState['options'][Options],
-  >(options: Options, key: Key, value: ForgerState['options'][Options][Key]): void => {
+  updateConfig = <
+    T extends keyof ForgerState['config'],
+    K extends keyof ForgerState['config'][T],
+  >(type: T, key: K, value: ForgerState['config'][T][K]): void => {
     this.setState(
       prevState => {
-        prevState.options[options][key] = value
+        prevState.config[type][key] = value
         return prevState
       },
       () => {
-        storage.set(_.forger, this.state.options)
+        storage.set(_.forger, this.state.config)
       }
     )
   }
 
   generateTSDefinition = () => {
     const { projectId: id } = this.props
-    const { ts } = this.state.options
+    const { ts } = this.state.config
     this.setState({ loading: true })
     fetchProjectInfo({ id })
       .then(projectInfo => {
@@ -89,7 +90,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         this.setState({
           dialog: {
             visible: true,
-            title: 'TypeScript 定义',
+            title: 'TS 代码',
             code: definition,
             html: `
               <pre class="language-typescript wrap">${
@@ -142,7 +143,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         this.setState({
           dialog: {
             visible: true,
-            title: '小程序 CSS',
+            title: 'CSS 代码',
             code: css,
             html: `
               <pre class="language-typescript">${
@@ -160,7 +161,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
 
   generateSVGZip = () => {
     const { projectId: id } = this.props
-    const { svgZip } = this.state.options
+    const { svgZip } = this.state.config
     this.setState({ loading: true })
     fetchProjectInfo({ id })
       .then(({ project, icons }) => {
@@ -196,62 +197,51 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
   }
 
   render() {
-    const { options: { ts, svgZip }, dialog } = this.state
+    const { config: { ts, svgZip }, dialog } = this.state
     return (
       <div>
         <Spin spinning={this.state.loading}>
           <div>
             <div className={_.actions}>
-              <Dropdown.Button
+              <XButton
+                icon='typescript'
                 className={_.action}
-                trigger={['click']}
                 onClick={this.generateTSDefinition}
-                overlay={(
-                  <Menu>
-                    <Menu.Item key='1' onClick={() => this.toggleOption('ts', 'withPrefix', false)}>
-                      <Radio checked={!ts.withPrefix}>
-                        图标名不带前缀
-                      </Radio>
-                    </Menu.Item>
-                    <Menu.Item key='2' onClick={() => this.toggleOption('ts', 'withPrefix', true)}>
-                      <Radio checked={ts.withPrefix}>
-                        图标名带前缀
-                      </Radio>
-                    </Menu.Item>
-                  </Menu>
-                )}>
-                <XIcon name='typescript' className={_.icon} />
+                right={
+                  <XConfig
+                    value={ts}
+                    config={[
+                      { name: 'withPrefix', title: '图标名称加上前缀', type: 'check' },
+                    ] as ConfigOptions}
+                    onChange={(key, value) => this.updateConfig('ts', key as any, value)}
+                  />
+                }>
                 生成图标名称的 TS 定义
-              </Dropdown.Button>
-              <Button className={_.action} onClick={this.generateWeappCSS}>
-                <XIcon name='weapp' className={_.icon} />
-                生成小程序 CSS
-              </Button>
-              <Dropdown.Button
+              </XButton>
+              <XButton
+                icon='pack'
                 className={_.action}
-                trigger={['click']}
                 onClick={this.generateSVGZip}
-                overlay={(
-                  <Menu>
-                    <Menu.Item key='1' onClick={() => this.toggleOption('svgZip', 'withPrefix', false)}>
-                      <Radio checked={!svgZip.withPrefix}>
-                        图标文件名不带前缀
-                      </Radio>
-                    </Menu.Item>
-                    <Menu.Item key='2' onClick={() => this.toggleOption('svgZip', 'withPrefix', true)}>
-                      <Radio checked={svgZip.withPrefix}>
-                        图标文件名带前缀
-                      </Radio>
-                    </Menu.Item>
-                  </Menu>
-                )}>
-                <XIcon name='pack' className={_.icon} />
+                right={
+                  <XConfig
+                    value={svgZip}
+                    config={[
+                      { name: 'withPrefix', title: '图标文件名称加上前缀', type: 'check' },
+                    ] as ConfigOptions}
+                    onChange={(key, value) => this.updateConfig('svgZip', key as any, value)}
+                  />
+                }>
                 打包下载 SVG 图标
-              </Dropdown.Button>
-              {/* <Button className={_.action} onClick={this.generateWeappCSS}>
-                <XIcon name='weapp' className={_.icon} />
-                生成 React SVG 图标组件
-              </Button> */}
+              </XButton>
+              <XButton
+                icon='weapp'
+                className={_.action}
+                onClick={this.generateWeappCSS}>
+                生成小程序 CSS
+              </XButton>
+              <XButton icon='ie' className={_.action}>
+                下载兼容 IE8 的 CSS
+              </XButton>
             </div>
           </div>
         </Spin>

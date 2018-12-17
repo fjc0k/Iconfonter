@@ -1,0 +1,19 @@
+@import '../../settings.less';
+
+.icon {
+  &:hover {
+    color: @primary-color;
+  }
+}
+
+.list {
+  .item {
+    + .item {
+      margin-top: 6px;
+    }
+    .title {
+      font-size: 13px;
+      color: #666;
+    }
+  }
+}
