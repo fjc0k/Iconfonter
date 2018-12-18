@@ -239,9 +239,6 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
                 onClick={this.generateWeappCSS}>
                 生成小程序 CSS
               </XButton>
-              <XButton icon='ie' className={_.action}>
-                下载兼容 IE8 的 CSS
-              </XButton>
             </div>
           </div>
         </Spin>
