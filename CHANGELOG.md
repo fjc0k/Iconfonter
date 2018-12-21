@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.3.0"></a>
+# [1.3.0](https://github.com/fjc0k/Iconfonter/compare/v1.2.0...v1.3.0) (2018-12-21)
+
+
+### Features
+
+* 新增将图标库图标一键全部加入购物车按钮 ([c9555fd](https://github.com/fjc0k/Iconfonter/commit/c9555fd))
+
+
+
 <a name="1.2.0"></a>
 # [1.2.0](https://github.com/fjc0k/Iconfonter/compare/v1.1.1...v1.2.0) (2018-12-18)
 
