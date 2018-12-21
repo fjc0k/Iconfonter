@@ -25,6 +25,19 @@
         "assets/Common.css",
         "assets/ManageProject.css"
       ]
+    },
+    {
+      "matches": [
+        "*://*.iconfont.cn/*"
+      ],
+      "js": [
+        "assets/Common.js",
+        "assets/CollectionDetail.js"
+      ],
+      "css": [
+        "assets/Common.css",
+        "assets/CollectionDetail.css"
+      ]
     }
   ]
 }

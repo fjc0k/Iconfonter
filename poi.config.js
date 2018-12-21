@@ -3,6 +3,9 @@ module.exports = {
     ManageProject: {
       entry: './src/pages/Manage/Project.tsx',
     },
+    CollectionDetail: {
+      entry: './src/pages/Collection/Detail.tsx',
+    },
   },
   outDir: './dist',
   filenameHash: false,
