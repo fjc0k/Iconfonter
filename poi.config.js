@@ -26,4 +26,7 @@ module.exports = {
       },
     },
   },
+  babel: {
+    transpileModules: ['mini-svg-data-uri'],
+  },
 }
