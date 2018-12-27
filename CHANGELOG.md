@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.4.1"></a>
+## [1.4.1](https://github.com/fjc0k/Iconfonter/compare/v1.4.0...v1.4.1) (2018-12-27)
+
+
+### Bug Fixes
+
+* transpile mini-svg-data-uri ([36a67f0](https://github.com/fjc0k/Iconfonter/commit/36a67f0))
+
+
+
 <a name="1.4.0"></a>
 # [1.4.0](https://github.com/fjc0k/Iconfonter/compare/v1.3.0...v1.4.0) (2018-12-27)
 
