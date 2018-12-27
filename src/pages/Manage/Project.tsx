@@ -11,9 +11,12 @@ import { Button, Spin, message } from 'antd'
 import { storage } from 'vtils'
 import Prism from 'prismjs'
 import 'prismjs/components/prism-typescript'
+import 'prismjs/components/prism-json'
+import svgToMiniDataURI from 'mini-svg-data-uri'
 import { XDialog, XButton, XConfig } from '../../components'
 import { fetchProjectInfo, createCdnFiles, fetchFile } from '../../api'
 import { ConfigOptions } from '../../components/Config'
+import minifySVG from '../../utils/minifySVG'
 import _ from './Project.module.less'
 
 interface ForgerProps {
@@ -189,6 +192,40 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
       })
   }
 
+  generateDataUriJson = () => {
+    const { projectId: id } = this.props
+    this.setState({ loading: true })
+    fetchProjectInfo({ id })
+      .then(({ icons }) => {
+        return JSON.stringify(
+          icons.reduce<{ [key: string]: string }>((res, icon) => {
+            res[icon.font_class] = svgToMiniDataURI(minifySVG(icon.show_svg))
+            return res
+          }, {}),
+          null,
+          2
+        )
+      })
+      .then(json => {
+        this.setState({
+          dialog: {
+            visible: true,
+            title: 'JSON 代码',
+            code: json,
+            html: `
+              <pre class="language-json">${
+                Prism.highlight(json, Prism.languages.json)
+              }</pre>
+            `,
+          },
+        })
+      })
+      .finally(() => {
+        (document.activeElement as HTMLButtonElement).blur()
+        this.setState({ loading: false })
+      })
+  }
+
   closeDialog = () => {
     this.setState(prevState => {
       prevState.dialog.visible = false
@@ -238,6 +275,12 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
                 className={_.action}
                 onClick={this.generateWeappCSS}>
                 生成小程序 CSS
+              </XButton>
+              <XButton
+                icon='json'
+                className={_.action}
+                onClick={this.generateDataUriJson}>
+                生成图标名称到 Data URI 的 JSON
               </XButton>
             </div>
           </div>
