@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.4.0"></a>
+# [1.4.0](https://github.com/fjc0k/Iconfonter/compare/v1.3.0...v1.4.0) (2018-12-27)
+
+
+### Bug Fixes
+
+* 全部加入购物车按钮样式权重加大 ([7e9e576](https://github.com/fjc0k/Iconfonter/commit/7e9e576))
+
+
+### Features
+
+* 新增生成图标名称到 Data URI 的 JSON ([51fbedd](https://github.com/fjc0k/Iconfonter/commit/51fbedd))
+
+
+
 <a name="1.3.0"></a>
 # [1.3.0](https://github.com/fjc0k/Iconfonter/compare/v1.2.0...v1.3.0) (2018-12-21)
 
