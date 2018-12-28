@@ -18,6 +18,7 @@
         "*://*.iconfont.cn/manage/index*"
       ],
       "js": [
+        "pngquant.js",
         "assets/Common.js",
         "assets/ManageProject.js"
       ],

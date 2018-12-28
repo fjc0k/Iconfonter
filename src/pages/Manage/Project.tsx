@@ -16,7 +16,8 @@ import svgToMiniDataURI from 'mini-svg-data-uri'
 import { XDialog, XButton, XConfig } from '../../components'
 import { fetchProjectInfo, createCdnFiles, fetchFile } from '../../api'
 import { ConfigOptions } from '../../components/Config'
-import minifySVG from '../../utils/minifySVG'
+import { minifySVG, minifyPNG } from '../../utils'
+import makeCSSSprite from '../../utils/makeCSSSprite'
 import _ from './Project.module.less'
 
 interface ForgerProps {
@@ -38,6 +39,12 @@ interface ForgerState {
     svgZip: {
       withPrefix: boolean,
     },
+    cssSprite: {
+      format: 'svg' | 'png',
+      size: number,
+      quality: number,
+      inline: boolean,
+    },
   },
 }
 
@@ -58,6 +65,12 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         },
         svgZip: {
           withPrefix: false,
+        },
+        cssSprite: {
+          format: 'svg',
+          size: 32,
+          quality: 70,
+          inline: true,
         },
         ...storage.get(_.forger, {}),
       },
@@ -226,6 +239,44 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
       })
   }
 
+  generateCSSSprite = () => {
+    const { projectId: id } = this.props
+    const { cssSprite } = this.state.config
+    const size = +cssSprite.size
+    this.setState({ loading: true })
+    fetchProjectInfo({ id })
+      .then(({ project, icons }) => {
+        return makeCSSSprite({
+          icons: icons.reduce((res, icon) => {
+            res[icon.font_class] = icon.show_svg
+            return res
+          }, {} as any),
+          format: cssSprite.format,
+          quality: cssSprite.quality,
+          iconSize: size,
+          gap: 3,
+        }).then(([icons, dataUri]) => {
+          console.log(`
+          .${project.font_family} {
+            background: url("${dataUri}") no-repeat top left;
+            background-size: 1em auto;
+            width: 1em;
+            height: 1em;
+          }
+          ${icons.map(({ name, y }) => `
+            .${project.font_family}-${name} {
+              background-position: 0 -${(y / size).toFixed(4)}em;
+            }
+          `).join('\n')}
+        `.length / 1024)
+        })
+      })
+      .finally(() => {
+        (document.activeElement as HTMLButtonElement).blur()
+        this.setState({ loading: false })
+      })
+  }
+
   closeDialog = () => {
     this.setState(prevState => {
       prevState.dialog.visible = false
@@ -234,7 +285,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
   }
 
   render() {
-    const { config: { ts, svgZip }, dialog } = this.state
+    const { config: { ts, svgZip, cssSprite }, dialog } = this.state
     return (
       <div>
         <Spin spinning={this.state.loading}>
@@ -248,7 +299,15 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
                   <XConfig
                     value={ts}
                     config={[
-                      { name: 'withPrefix', title: '图标名称加上前缀', type: 'check' },
+                      {
+                        name: 'withPrefix',
+                        title: '图标名称加上前缀',
+                        type: 'radio',
+                        options: [
+                          { label: '是', value: true },
+                          { label: '否', value: false },
+                        ],
+                      },
                     ] as ConfigOptions}
                     onChange={(key, value) => this.updateConfig('ts', key as any, value)}
                   />
@@ -263,12 +322,54 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
                   <XConfig
                     value={svgZip}
                     config={[
-                      { name: 'withPrefix', title: '图标文件名称加上前缀', type: 'check' },
+                      {
+                        name: 'withPrefix',
+                        title: '图标文件名称加上前缀',
+                        type: 'radio',
+                        options: [
+                          { label: '是', value: true },
+                          { label: '否', value: false },
+                        ],
+                      },
                     ] as ConfigOptions}
                     onChange={(key, value) => this.updateConfig('svgZip', key as any, value)}
                   />
                 }>
                 打包下载 SVG 图标
+              </XButton>
+              <XButton
+                icon='sprite'
+                className={_.action}
+                onClick={this.generateCSSSprite}
+                right={
+                  <XConfig
+                    value={cssSprite}
+                    config={[
+                      {
+                        name: 'format',
+                        title: '雪碧图格式',
+                        type: 'radio',
+                        options: [
+                          { label: 'SVG', value: 'svg' },
+                          { label: 'PNG', value: 'png' },
+                        ],
+                      },
+                      { name: 'size', title: '雪碧图上图标的大小(像素)', type: 'number', min: 0, step: 16 },
+                      { name: 'quality', title: '生成的雪碧图质量(仅对 PNG 格式有效)', type: 'number', min: 0, max: 100, step: 10 },
+                      {
+                        name: 'inline',
+                        title: '将雪碧图内联在 CSS 里',
+                        type: 'radio',
+                        options: [
+                          { label: '是', value: true },
+                          { label: '否', value: false },
+                        ],
+                      },
+                    ] as ConfigOptions}
+                    onChange={(key, value) => this.updateConfig('cssSprite', key as any, value)}
+                  />
+                }>
+                生成 CSS Sprite
               </XButton>
               <XButton
                 icon='weapp'

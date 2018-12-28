@@ -1,13 +1,23 @@
 import React from 'react'
-import { Popover, Checkbox } from 'antd'
+import { Popover, Slider, InputNumber, Radio } from 'antd'
 import XIcon from '../Icon'
 import _ from './index.module.less'
 
 export type ConfigOptions = Array<{
   name: string,
   title: string,
-  type: 'check' | 'input',
-}>
+} & ({
+  type: 'slider' | 'number',
+  min: number,
+  max: number,
+  step: number,
+} | {
+  type: 'radio',
+  options: Array<{
+    label: string | number,
+    value: any,
+  }>,
+})>
 
 export default class XConfig extends React.Component<{
   config: ConfigOptions,
@@ -19,23 +29,46 @@ export default class XConfig extends React.Component<{
     return (
       <span>
         <Popover
-          placement='bottom'
+          placement='right'
           content={(
             <div className={_.list}>
               {config.map((item, index) => (
                 <div className={_.item} key={index}>
-                  {item.type === 'check' ? (
-                    <Checkbox
-                      checked={!!(value as any)[item.name]}
-                      onChange={e => onChange(item.name, e.target.checked)}>
-                      <span className={_.title}>
-                        {item.title}
-                      </span>
-                    </Checkbox>
-                  ) : (
-                    // todo
-                    <div></div>
-                  )}
+                  <div className={_.title}>{item.title}</div>
+                  <div className={_.content}>
+                    {(() => {
+                      const _value = (value as any)[item.name]
+                      switch (item.type) {
+                        case 'number':
+                          const Component: any = item.type === 'slider' ? Slider : InputNumber
+                          return (
+                            <Component
+                              size='small'
+                              defaultValue={_value}
+                              min={item.min}
+                              max={item.max}
+                              step={item.step}
+                              onChange={(value: any) => onChange(item.name, value)}
+                            />
+                          )
+                        case 'radio':
+                          return (
+                            <Radio.Group
+                              size='small'
+                              defaultValue={_value}
+                              onChange={e => onChange(item.name, e.target.value)}>
+                              {item.options.map((option, index) => (
+                                <Radio.Button value={option.value} key={String(index)}>
+                                  {option.label}
+                                </Radio.Button>
+                              ))}
+                            </Radio.Group>
+                          )
+                        default:
+                          break
+                      }
+                    })()}
+                  </div>
                 </div>
               ))}
             </div>
