@@ -24,6 +24,7 @@
   ],
   "devDependencies": {
     "@types/base64-js": "^1.2.5",
+    "@types/chrome": "^0.0.89",
     "@types/file-saver": "^2.0.0",
     "@types/fs-extra": "^5.0.4",
     "@types/js-cookie": "^2.2.0",

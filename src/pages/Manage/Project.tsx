@@ -99,7 +99,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
     fetchProjectInfo({ id })
       .then(projectInfo => {
         return projectInfo.icons.map(
-          icon => `'${ts.withPrefix ? `${projectInfo.project.prefix}-` : ''}${icon.font_class}'`
+          icon => `'${ts.withPrefix ? `${projectInfo.project.prefix}` : ''}${icon.font_class}'`
         ).join(' | ')
       })
       .then(definition => {
@@ -150,7 +150,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
 
           ${(
             icons
-              .map(icon => `.${project.prefix}-${icon.font_class}:before {\n  content: "\\${Number(icon.unicode).toString(16)}";\n}`)
+              .map(icon => `.${project.prefix}${icon.font_class}:before {\n  content: "\\${Number(icon.unicode).toString(16)}";\n}`)
               .join('\n\n')
           )}
         `.replace(/ {9}/g, '').trim()
@@ -337,7 +337,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
                 }>
                 打包下载 SVG 图标
               </XButton>
-              <XButton
+              {/* <XButton
                 icon='sprite'
                 className={_.action}
                 onClick={this.generateCSSSprite}
@@ -370,7 +370,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
                   />
                 }>
                 生成 CSS Sprite
-              </XButton>
+              </XButton> */}
               <XButton
                 icon='weapp'
                 className={_.action}

@@ -1,8 +1,9 @@
 import cookie from 'js-cookie'
-import { request as baseRequest, isPlainObject } from 'vtils'
+import { isPlainObject, isString } from 'vtils'
 import { RequestOptions } from 'vtils/lib/request'
+import { BackgroundRequest } from './background'
 
-const baseUrl = '/api/'
+const baseUrl = `${location.protocol}//${location.host}/api/`
 
 const request = (options: {
   url: string,
@@ -10,19 +11,36 @@ const request = (options: {
   data?: object,
   responseDataType?: RequestOptions['responseDataType'],
 }) => {
-  return baseRequest({
-    url: /^(http)?s?:?\/\//i.test(options.url) ? options.url : `${baseUrl}${options.url}`,
-    method: options.method,
-    data: {
-      ...options.data,
-      ctoken: cookie.get('ctoken'),
-      t: new Date().getTime(),
-    },
-    requestDataType: 'querystring',
-    responseDataType: options.responseDataType || 'json',
-  }).then(res => {
+  return new Promise(resolve => {
+    let url = /^(http)?s?:?\/\//i.test(options.url)
+      ? options.url
+      : `${baseUrl}${options.url}`
+    if (!url.startsWith('http')) {
+      url = location.protocol + url
+    }
+    chrome.runtime.sendMessage(
+      {
+        type: 'httpRequest',
+        options: {
+          url: url,
+          method: options.method,
+          data: {
+            ...options.data,
+            ctoken: cookie.get('ctoken'),
+            t: new Date().getTime(),
+          },
+          requestDataType: 'querystring',
+          responseDataType: options.responseDataType || 'json',
+        },
+      } as BackgroundRequest,
+      resolve
+    )
+  }).then(async (res: any) => {
     if (isPlainObject(res.data)) {
       return (res.data as any).data
+    }
+    if (isString(res.data) && res.data.startsWith('blob:')) {
+      res.data = await fetch(res.data).then(res => res.arrayBuffer())
     }
     return res.data
   })

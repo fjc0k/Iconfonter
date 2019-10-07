@@ -1,5 +1,8 @@
 module.exports = {
   pages: {
+    background: {
+      entry: './src/background.ts',
+    },
     ManageProject: {
       entry: './src/pages/Manage/Project.tsx',
     },

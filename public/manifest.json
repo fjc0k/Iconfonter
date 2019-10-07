@@ -7,11 +7,14 @@
     "128": "logo.png"
   },
   "permissions": [
-    "http://at.alicdn.com/",
-    "https://at.alicdn.com/",
-    "http://*.iconfont.cn/",
-    "https://*.iconfont.cn/"
+    "*://*.alicdn.com/",
+    "*://*.iconfont.cn/"
   ],
+  "background": {
+    "scripts" : [
+      "assets/background.js"
+    ]
+  },
   "content_scripts": [
     {
       "matches": [
