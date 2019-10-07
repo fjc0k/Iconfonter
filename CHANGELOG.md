@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.4.2"></a>
+## [1.4.2](https://github.com/fjc0k/Iconfonter/compare/v1.4.1...v1.4.2) (2019-10-07)
+
+
+### Bug Fixes
+
+* 解决一些问题 ([0821477](https://github.com/fjc0k/Iconfonter/commit/0821477))
+
+
+
 <a name="1.4.1"></a>
 ## [1.4.1](https://github.com/fjc0k/Iconfonter/compare/v1.4.0...v1.4.1) (2018-12-27)
 
