@@ -1,6 +1,6 @@
 {
-  "name": "Iconfonter",
-  "description": "iconfont.cn 辅助工具。",
+  "name": "iconfont.cn 辅助工具集合",
+  "description": "iconfont.cn 辅助工具集合。",
   "version": "1.4.3",
   "manifest_version": 2,
   "icons": {
