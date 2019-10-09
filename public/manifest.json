@@ -12,6 +12,7 @@
   ],
   "background": {
     "scripts": [
+      "assets/Common.js",
       "assets/background.js"
     ]
   },
