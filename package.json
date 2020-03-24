@@ -6,9 +6,9 @@
   "author": "fjc0k <fjc0kb@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "dev": "poi watch",
+    "dev": "npm run build && poi watch",
     "build": "poi build && bestzip iconfonter.zip dist/*",
-    "release": "standard-version -a && git push --follow-tags origin master && yarn build && opn https://chrome.google.com/webstore/devconsole"
+    "release": "standard-version -a && git push --follow-tags origin master && npm run build && opn https://chrome.google.com/webstore/devconsole"
   },
   "standard-version": {
     "scripts": {
@@ -41,7 +41,7 @@
     "less": "^3.9.0",
     "less-loader": "^4.1.0",
     "opn-cli": "^4.0.0",
-    "poi": "^11.0.0-beta.6",
+    "poi": "11.0.0-beta.6",
     "standard-version": "^4.4.0",
     "ts-node": "^7.0.1",
     "typescript": "^3.8.3",
