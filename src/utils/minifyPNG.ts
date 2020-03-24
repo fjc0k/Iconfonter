@@ -17,7 +17,7 @@ export default function minifyPNG(dataurl: string, quality: number): Promise<str
     }, () => {})
     const fh = new FileReader()
     fh.onload = e => {
-      resolve((e.target as any).result)
+      resolve((e.target as any).result.replace(/^data:application\/octet-stream;/, 'data:image/png;'))
     }
     fh.readAsDataURL(new Blob([result.data]))
   })

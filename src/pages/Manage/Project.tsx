@@ -8,17 +8,22 @@ import CopyToClipboard from 'react-copy-to-clipboard'
 import JSZip from 'jszip'
 import FileSaver from 'file-saver'
 import { Button, Spin, message } from 'antd'
-import { storage } from 'vtils'
+import { EasyStorage, EasyStorageAdapterBrowserLocalStorage } from 'vtils'
 import Prism from 'prismjs'
 import 'prismjs/components/prism-typescript'
 import 'prismjs/components/prism-json'
 import svgToMiniDataURI from 'mini-svg-data-uri'
+import { dedent } from 'vtils'
 import { XDialog, XButton, XConfig } from '../../components'
 import { fetchProjectInfo, createCdnFiles, fetchFile } from '../../api'
 import { ConfigOptions } from '../../components/Config'
 import { minifySVG, minifyPNG } from '../../utils'
 import makeCSSSprite from '../../utils/makeCSSSprite'
 import _ from './Project.module.less'
+
+const storage = new EasyStorage<{
+forger: ForgerState
+}>(new EasyStorageAdapterBrowserLocalStorage())
 
 interface ForgerProps {
   projectId: number,
@@ -43,7 +48,6 @@ interface ForgerState {
       format: 'svg' | 'png',
       size: number,
       quality: number,
-      inline: boolean,
     },
   },
 }
@@ -67,12 +71,11 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
           withPrefix: false,
         },
         cssSprite: {
-          format: 'svg',
+          format: 'png',
           size: 32,
           quality: 70,
-          inline: true,
         },
-        ...storage.get(_.forger, {}),
+        ...storage.getSync('forger', {} as any),
       },
     }
   }
@@ -87,7 +90,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         return prevState
       },
       () => {
-        storage.set(_.forger, this.state.config)
+        storage.set('forger', this.state.config as any)
       }
     )
   }
@@ -134,7 +137,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
       .then(([{ project, icons }, file]) => {
         const base64String = base64.fromByteArray(new Uint8Array(file))
         const base64UrlString = `data:font/woff;charset=utf-8;base64,${base64String}`
-        return `
+        return dedent`
           @font-face {
             font-family: "${project.font_family}";
             src: url("${base64UrlString}") format("woff");
@@ -148,12 +151,12 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
             -moz-osx-font-smoothing: grayscale;
           }
 
-          ${(
-            icons
-              .map(icon => `.${project.prefix}${icon.font_class}:before {\n  content: "\\${Number(icon.unicode).toString(16)}";\n}`)
-              .join('\n\n')
-          )}
-        `.replace(/ {9}/g, '').trim()
+          ${icons.map(icon => dedent`
+            .${project.prefix}${icon.font_class}::before {
+              content: "\\${Number(icon.unicode).toString(16)}";
+            }
+          `).join('\n\n')}
+        `
       })
       .then(css => {
         this.setState({
@@ -161,8 +164,8 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
             visible: true,
             title: 'CSS 代码',
             code: css,
-            html: `
-              <pre class="language-typescript">${
+            html: dedent`
+              <pre class="language-css">${
                 Prism.highlight(css, Prism.languages.css)
               }</pre>
             `,
@@ -184,11 +187,11 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         const zip = new JSZip()
         icons.forEach(icon => {
           const fileName = `${svgZip.withPrefix ? `${project.prefix}-` : ''}${icon.font_class}.svg`
-          const fileContent = `
+          const fileContent = dedent`
             <?xml version="1.0" standalone="no"?>
             <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
             ${icon.show_svg}
-          `.replace(/ {11}/g, '').trim()
+          `
           zip.file(fileName, fileContent)
         })
         return Promise.all([
@@ -225,7 +228,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
             visible: true,
             title: 'JSON 代码',
             code: json,
-            html: `
+            html: dedent`
               <pre class="language-json">${
                 Prism.highlight(json, Prism.languages.json)
               }</pre>
@@ -256,19 +259,32 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
           iconSize: size,
           gap: 3,
         }).then(([icons, dataUri]) => {
-          console.log(`
-          .${project.font_family} {
-            background: url("${dataUri}") no-repeat top left;
-            background-size: 1em auto;
-            width: 1em;
-            height: 1em;
-          }
-          ${icons.map(({ name, y }) => `
-            .${project.font_family}-${name} {
-              background-position: 0 -${(y / size).toFixed(4)}em;
+          const css = dedent`
+            .${project.font_family} {
+              background: url("${dataUri}") no-repeat top left;
+              background-size: 1em auto;
+              width: 1em;
+              height: 1em;
             }
-          `).join('\n')}
-        `.length / 1024)
+
+            ${icons.map(({ name, y }) => dedent`
+              .${project.prefix}${name} {
+                background-position: 0 -${(y / size).toFixed(4)}em;
+              }
+            `).join('\n\n')}
+          `
+          this.setState({
+            dialog: {
+              visible: true,
+              title: 'CSS 代码',
+              code: css,
+              html: dedent`
+                <pre class="language-css">${
+                  Prism.highlight(css, Prism.languages.css)
+                }</pre>
+              `,
+            },
+          })
         })
       })
       .finally(() => {
@@ -337,7 +353,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
                 }>
                 打包下载 SVG 图标
               </XButton>
-              {/* <XButton
+              <XButton
                 icon='sprite'
                 className={_.action}
                 onClick={this.generateCSSSprite}
@@ -350,27 +366,18 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
                         title: '雪碧图格式',
                         type: 'radio',
                         options: [
-                          { label: 'SVG', value: 'svg' },
-                          { label: 'PNG', value: 'png' },
+                          { label: 'SVG(不失真)', value: 'svg' },
+                          { label: 'PNG(可压缩)', value: 'png' },
                         ],
                       },
-                      { name: 'size', title: '雪碧图上图标的大小(像素)', type: 'number', min: 0, step: 16 },
+                      { name: 'size', title: '雪碧图上图标的大小(像素，仅对 PNG 格式有效)', type: 'number', min: 0, step: 16 },
                       { name: 'quality', title: '生成的雪碧图质量(仅对 PNG 格式有效)', type: 'number', min: 0, max: 100, step: 10 },
-                      {
-                        name: 'inline',
-                        title: '将雪碧图内联在 CSS 里',
-                        type: 'radio',
-                        options: [
-                          { label: '是', value: true },
-                          { label: '否', value: false },
-                        ],
-                      },
                     ] as ConfigOptions}
                     onChange={(key, value) => this.updateConfig('cssSprite', key as any, value)}
                   />
                 }>
-                生成 CSS Sprite
-              </XButton> */}
+                生成雪碧图 CSS
+              </XButton>
               <XButton
                 icon='weapp'
                 className={_.action}

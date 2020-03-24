@@ -1,6 +1,5 @@
 import cookie from 'js-cookie'
 import { isPlainObject, isString } from 'vtils'
-import { RequestOptions } from 'vtils/lib/request'
 import { BackgroundRequest } from './background'
 
 const baseUrl = `${location.protocol}//${location.host}/api/`
@@ -8,8 +7,8 @@ const baseUrl = `${location.protocol}//${location.host}/api/`
 const request = (options: {
   url: string,
   method: 'GET' | 'POST',
-  data?: object,
-  responseDataType?: RequestOptions['responseDataType'],
+  data?: Record<string, any>,
+  responseDataType?: 'json' | 'arraybuffer',
 }) => {
   return new Promise(resolve => {
     let url = /^(http)?s?:?\/\//i.test(options.url)
@@ -18,31 +17,36 @@ const request = (options: {
     if (!url.startsWith('http')) {
       url = location.protocol + url
     }
+    const data = {
+      ...(options.data || {}),
+      ctoken: cookie.get('ctoken'),
+      t: new Date().getTime(),
+    }
     chrome.runtime.sendMessage(
       {
         type: 'httpRequest',
         options: {
-          url: url,
+          url: url + (options.method === 'GET' ? `?${new URLSearchParams(data as any).toString()}` : ''),
           method: options.method,
-          data: {
-            ...options.data,
-            ctoken: cookie.get('ctoken'),
-            t: new Date().getTime(),
+          responseIsFile: options.responseDataType === 'arraybuffer',
+          body: options.method === 'GET'
+            ? undefined
+            : JSON.stringify(data),
+          headers: options.method === 'GET' ? {} : {
+            'Content-Type': 'application/json',
           },
-          requestDataType: 'querystring',
-          responseDataType: options.responseDataType || 'json',
         },
-      } as BackgroundRequest,
+      } as any as BackgroundRequest,
       resolve
     )
-  }).then(async (res: any) => {
-    if (isPlainObject(res.data)) {
-      return (res.data as any).data
+  }).then(async (data: any) => {
+    if (isPlainObject(data)) {
+      return data.data || data
     }
-    if (isString(res.data) && res.data.startsWith('blob:')) {
-      res.data = await fetch(res.data).then(res => res.arrayBuffer())
+    if (isString(data) && data.startsWith('blob:')) {
+      data = await fetch(data).then(res => res.arrayBuffer())
     }
-    return res.data
+    return data
   })
 }
 
@@ -84,6 +88,7 @@ export function createCdnFiles({ id }: { id: number }) {
   return request({
     url: 'project/cdn.json',
     method: 'POST',
+    responseDataType: 'json',
     data: {
       pid: id,
     },

@@ -59,6 +59,6 @@
     "react": "^16.6.3",
     "react-copy-to-clipboard": "^5.0.1",
     "react-dom": "^16.6.3",
-    "vtils": "^0.64.0"
+    "vtils": "^2.57.0"
   }
 }

@@ -1,20 +1,20 @@
-import { request as baseRequest } from 'vtils'
-import { RequestOptions } from 'vtils/lib/request'
-
 export type BackgroundRequest = {
   type: 'httpRequest',
-  options: RequestOptions,
+  options: Exclude<RequestInfo, string> & {
+    responseIsFile?: boolean,
+  },
 }
 
 chrome.runtime.onMessage.addListener(
   (request: BackgroundRequest, _, sendResponse) => {
     if (request.type === 'httpRequest') {
-      baseRequest(request.options).then(res => {
-        if (res.data instanceof ArrayBuffer) {
-          res.data = URL.createObjectURL(new Blob([res.data])) as any
-        }
-        sendResponse(res)
-      })
+      fetch(request.options.url, request.options)
+        .then(res => {
+          return request.options.responseIsFile
+            ? res.arrayBuffer().then(data => URL.createObjectURL(new Blob([data])))
+            : res.json()
+        })
+        .then(sendResponse)
     }
     return true
   }
