@@ -1,39 +1,39 @@
-import React from 'react'
-import XIcon from '../Icon'
 import _ from './index.module.less'
+import React, { useCallback } from 'react'
+import { XIcon } from '../Icon'
 
-export default class XDialog extends React.Component<{
+export interface XDialogProps {
   visible: boolean,
   title: string,
   footer?: React.ReactNode,
+  children?: any,
   onVisibleChange: (visible: boolean) => any,
-  }> {
-  private toggle = () => {
-    const { visible } = this.props
-    this.props.onVisibleChange(!visible)
-  }
+}
 
-  public render() {
-    return (
-      <div className={`${_.dialog} ${this.props.visible ? '' : _.hidden}`}>
-        <div className={_.mask} onClick={this.toggle} />
-        <div className={_.content}>
-          <div className={_.title}>
-            {this.props.title}
-          </div>
-          <div className={_.main}>
-            {this.props.children}
-          </div>
-          <div className={_.footer}>
-            {this.props.footer}
-          </div>
-          <XIcon
-            className={_.close}
-            name='close'
-            onClick={this.toggle}
-          />
+export function XDialog(props: XDialogProps) {
+  const handleToggle = useCallback(() => {
+    props.onVisibleChange(!props.visible)
+  }, [props.visible])
+
+  return (
+    <div className={`${_.dialog} ${!props.visible && _.hidden}`}>
+      <div className={_.mask} onClick={handleToggle} />
+      <div className={_.content}>
+        <div className={_.title}>
+          {props.title}
         </div>
+        <div className={_.main}>
+          {props.children}
+        </div>
+        <div className={_.footer}>
+          {props.footer}
+        </div>
+        <XIcon
+          className={_.close}
+          name='close'
+          onClick={handleToggle}
+        />
       </div>
-    )
-  }
+    </div>
+  )
 }

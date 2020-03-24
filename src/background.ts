@@ -17,5 +17,5 @@ chrome.runtime.onMessage.addListener(
         .then(sendResponse)
     }
     return true
-  }
+  },
 )

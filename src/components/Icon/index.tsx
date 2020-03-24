@@ -1,16 +1,16 @@
-import React from 'react'
 import _ from './index.module.less'
+import React from 'react'
 
-export default class XIcon extends React.Component<React.ComponentProps<'span'> & {
-  name: 'sprite' | 'json' | 'config' | 'pack' | 'weapp' | 'typescript' | 'ie' | 'github' | 'good' | 'close'
-  }> {
-  render() {
-    const { name, className, ...props } = this.props
-    return (
-      <span
-        className={`${className} ${_.Iconfonter} ${_[`Iconfonter-${name}`]}`}
-        {...props}
-      />
-    )
-  }
+export interface XIconProps extends React.ComponentProps<'span'> {
+  name: 'unit' | 'sprite' | 'json' | 'config' | 'pack' | 'weapp' | 'typescript' | 'ie' | 'github' | 'good' | 'close',
+}
+
+export function XIcon(props: XIconProps) {
+  const { name, className, ...restProps } = props
+  return (
+    <span
+      className={`${className} ${_.Iconfonter} ${_[`Iconfonter-${name}`]}`}
+      {...restProps}
+    />
+  )
 }

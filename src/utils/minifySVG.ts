@@ -1,4 +1,4 @@
-export default function minifySVG<T>(svg: string, extraAttrs?: { [key: string]: string }, returnNode?: T): T extends true ? HTMLElement : string {
+export function minifySVG<T>(svg: string, extraAttrs?: { [key: string]: string }, returnNode?: T): T extends true ? HTMLElement : string {
   const div = document.createElement('div')
   div.innerHTML = svg
   const svgNode = div.firstChild as SVGElement

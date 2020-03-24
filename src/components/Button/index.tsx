@@ -1,29 +1,27 @@
-import React from 'react'
 import _ from './index.module.less'
-import { XIcon } from '..'
+import React from 'react'
+import { XIcon, XIconProps } from '../Icon'
 
-export default class XButton extends React.Component<React.ComponentProps<'div'> & {
-  icon?: XIcon['props']['name'],
-  // data?: Data,
-  // value?: Value<XButton['props']>,
+export interface XButtonProps extends React.ComponentProps<'div'> {
+  icon?: XIconProps['name'],
   right?: React.ReactNode,
-  }> {
-  render() {
-    const { className, icon, right, onClick, ...props } = this.props
-    return (
-      <div className={`${_.wrapper} ${className}`} {...props}>
-        <span className={_.button} onClick={onClick}>
-          {icon && (
-            <XIcon name={icon} className={_.icon} />
-          )}
-          {this.props.children}
-        </span>
-        {right && (
-          <span className={_.right}>
-            {right}
-          </span>
+}
+
+export function XButton(props: XButtonProps) {
+  const { className, icon, right, onClick, children, ...restProps } = props
+  return (
+    <div className={`${_.wrapper} ${className}`} {...restProps}>
+      <span className={_.button} onClick={onClick}>
+        {icon && (
+          <XIcon name={icon} className={_.icon} />
         )}
-      </div>
-    )
-  }
+        {children}
+      </span>
+      {right && (
+        <span className={_.right}>
+          {right}
+        </span>
+      )}
+    </div>
+  )
 }

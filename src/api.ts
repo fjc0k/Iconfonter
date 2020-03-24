@@ -1,6 +1,6 @@
 import cookie from 'js-cookie'
-import { isPlainObject, isString } from 'vtils'
 import { BackgroundRequest } from './background'
+import { isPlainObject, isString } from 'vtils'
 
 const baseUrl = `${location.protocol}//${location.host}/api/`
 
@@ -37,7 +37,7 @@ const request = (options: {
           },
         },
       } as any as BackgroundRequest,
-      resolve
+      resolve,
     )
   }).then(async (data: any) => {
     if (isPlainObject(data)) {

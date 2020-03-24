@@ -20,7 +20,8 @@ window.addEventListener('load', () => {
           buttonGroupEl.appendChild(addButtonNode)
         }
       }
-    } else {
+    }
+    else {
       if (!isCollectionDetailPage) {
         addButtonEl.parentNode.removeChild(addButtonEl)
       }

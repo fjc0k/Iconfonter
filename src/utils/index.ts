@@ -1,3 +1,5 @@
-// @index(\.ts$)
-export { default as minifyPNG } from './minifyPNG'
-export { default as minifySVG } from './minifySVG'
+// @index('./*', f => `export * from '${f.path}'`)
+export * from './makeCSSSprite'
+export * from './minifyPNG'
+export * from './minifySVG'
+// @endindex

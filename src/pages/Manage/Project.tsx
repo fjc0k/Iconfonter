@@ -1,28 +1,29 @@
+/* eslint-disable react/jsx-handler-names */
 import 'antd/lib/style/components.less'
+import 'prismjs/components/prism-json'
+import 'prismjs/components/prism-typescript'
 import 'prismjs/themes/prism-tomorrow.css'
-import qs from 'qs'
+import _ from './Project.module.less'
 import base64 from 'base64-js'
+import CopyToClipboard from 'react-copy-to-clipboard'
+import FileSaver from 'file-saver'
+import JSZip from 'jszip'
+import Prism from 'prismjs'
+import qs from 'qs'
 import React from 'react'
 import ReactDom from 'react-dom'
-import CopyToClipboard from 'react-copy-to-clipboard'
-import JSZip from 'jszip'
-import FileSaver from 'file-saver'
-import { Button, Spin, message } from 'antd'
-import { EasyStorage, EasyStorageAdapterBrowserLocalStorage } from 'vtils'
-import Prism from 'prismjs'
-import 'prismjs/components/prism-typescript'
-import 'prismjs/components/prism-json'
 import svgToMiniDataURI from 'mini-svg-data-uri'
+import { Button, message, Spin } from 'antd'
+import { createCdnFiles, fetchFile, fetchProjectInfo } from '../../api'
 import { dedent } from 'vtils'
-import { XDialog, XButton, XConfig } from '../../components'
-import { fetchProjectInfo, createCdnFiles, fetchFile } from '../../api'
-import { ConfigOptions } from '../../components/Config'
-import { minifySVG, minifyPNG } from '../../utils'
-import makeCSSSprite from '../../utils/makeCSSSprite'
-import _ from './Project.module.less'
+import { EasyStorage, EasyStorageAdapterBrowserLocalStorage } from 'vtils'
+import { IConfigOptions } from '../../components/Config'
+import { makeCSSSprite, minifySVG } from '../../utils'
+import { pascalCase } from 'change-case'
+import { XButton, XConfig, XDialog } from '../../components'
 
 const storage = new EasyStorage<{
-forger: ForgerState
+  forger: ForgerState,
 }>(new EasyStorageAdapterBrowserLocalStorage())
 
 interface ForgerProps {
@@ -91,206 +92,215 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
       },
       () => {
         storage.set('forger', this.state.config as any)
-      }
+      },
     )
   }
 
-  generateTSDefinition = () => {
-    const { projectId: id } = this.props
-    const { ts } = this.state.config
+  runGenerator = async (generator: () => any) => {
     this.setState({ loading: true })
-    fetchProjectInfo({ id })
-      .then(projectInfo => {
-        return projectInfo.icons.map(
-          icon => `'${ts.withPrefix ? `${projectInfo.project.prefix}` : ''}${icon.font_class}'`
-        ).join(' | ')
+    await generator()
+    ;(document.activeElement as HTMLButtonElement).blur()
+    this.setState({ loading: false })
+  }
+
+  generateTSDefinition = () => {
+    this.runGenerator(async () => {
+      const { projectId: id } = this.props
+      const { ts } = this.state.config
+      const projectInfo = await fetchProjectInfo({ id })
+      const definition = projectInfo.icons
+        .map(
+          icon => `'${ts.withPrefix ? `${projectInfo.project.prefix}` : ''}${icon.font_class}'`,
+        )
+        .join(' | ')
+      this.setState({
+        dialog: {
+          visible: true,
+          title: 'TS 代码',
+          code: definition,
+          html: `
+            <pre class="language-typescript wrap">${
+              Prism.highlight(definition, Prism.languages.typescript)
+            }</pre>
+          `,
+        },
       })
-      .then(definition => {
-        this.setState({
-          dialog: {
-            visible: true,
-            title: 'TS 代码',
-            code: definition,
-            html: `
-              <pre class="language-typescript wrap">${
-                Prism.highlight(definition, Prism.languages.typescript)
-              }</pre>
-            `,
-          },
-        })
-      })
-      .finally(() => {
-        (document.activeElement as HTMLButtonElement).blur()
-        this.setState({ loading: false })
-      })
+    })
   }
 
   generateWeappCSS = () => {
-    const { projectId: id } = this.props
-    this.setState({ loading: true })
-    createCdnFiles({ id })
-      .then(() => fetchProjectInfo({ id }))
-      .then(projectInfo => Promise.all([
-        Promise.resolve(projectInfo),
-        fetchFile({ url: projectInfo.font.woff_file }),
-      ]))
-      .then(([{ project, icons }, file]) => {
-        const base64String = base64.fromByteArray(new Uint8Array(file))
-        const base64UrlString = `data:font/woff;charset=utf-8;base64,${base64String}`
-        return dedent`
-          @font-face {
-            font-family: "${project.font_family}";
-            src: url("${base64UrlString}") format("woff");
-          }
+    this.runGenerator(async () => {
+      const { projectId: id } = this.props
+      await createCdnFiles({ id })
+      const { project, font, icons } = await fetchProjectInfo({ id })
+      const file = await fetchFile({ url: font.woff_file })
+      const base64String = base64.fromByteArray(new Uint8Array(file))
+      const base64UrlString = `data:font/woff;charset=utf-8;base64,${base64String}`
+      const css = dedent`
+        @font-face {
+          font-family: "${project.font_family}";
+          src: url("${base64UrlString}") format("woff");
+        }
 
-          .${project.font_family} {
-            font-family: "${project.font_family}" !important;
-            font-size: 1em;
-            font-style: normal;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-          }
+        .${project.font_family} {
+          font-family: "${project.font_family}" !important;
+          font-size: 1em;
+          font-style: normal;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
 
-          ${icons.map(icon => dedent`
-            .${project.prefix}${icon.font_class}::before {
-              content: "\\${Number(icon.unicode).toString(16)}";
-            }
-          `).join('\n\n')}
-        `
-      })
-      .then(css => {
-        this.setState({
-          dialog: {
-            visible: true,
-            title: 'CSS 代码',
-            code: css,
-            html: dedent`
+        ${icons.map(icon => dedent`
+          .${project.prefix}${icon.font_class}::before {
+            content: "\\${Number(icon.unicode).toString(16)}";
+          }
+        `).join('\n\n')}
+      `
+      this.setState({
+        dialog: {
+          visible: true,
+          title: 'CSS 代码',
+          code: css,
+          html: dedent`
               <pre class="language-css">${
                 Prism.highlight(css, Prism.languages.css)
               }</pre>
             `,
-          },
-        })
+        },
       })
-      .finally(() => {
-        (document.activeElement as HTMLButtonElement).blur()
-        this.setState({ loading: false })
-      })
+    })
   }
 
   generateSVGZip = () => {
-    const { projectId: id } = this.props
-    const { svgZip } = this.state.config
-    this.setState({ loading: true })
-    fetchProjectInfo({ id })
-      .then(({ project, icons }) => {
-        const zip = new JSZip()
-        icons.forEach(icon => {
-          const fileName = `${svgZip.withPrefix ? `${project.prefix}-` : ''}${icon.font_class}.svg`
-          const fileContent = dedent`
-            <?xml version="1.0" standalone="no"?>
-            <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-            ${icon.show_svg}
-          `
-          zip.file(fileName, fileContent)
-        })
-        return Promise.all([
-          Promise.resolve(project),
-          zip.generateAsync({ type: 'blob' }),
-        ])
+    this.runGenerator(async () => {
+      const { projectId: id } = this.props
+      const { svgZip } = this.state.config
+      const { project, icons } = await fetchProjectInfo({ id })
+      const zip = new JSZip()
+      icons.forEach(icon => {
+        const fileName = `${svgZip.withPrefix ? `${project.prefix}-` : ''}${icon.font_class}.svg`
+        const fileContent = dedent`
+          <?xml version="1.0" standalone="no"?>
+          <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+          ${icon.show_svg}
+        `
+        zip.file(fileName, fileContent)
       })
-      .then(([project, zip]) => {
-        FileSaver.saveAs(zip, `${project.name}(SVG).zip`)
-      })
-      .finally(() => {
-        (document.activeElement as HTMLButtonElement).blur()
-        this.setState({ loading: false })
-      })
+      const zipArchive = await zip.generateAsync({ type: 'blob' })
+      FileSaver.saveAs(zipArchive, `${project.name}(SVG).zip`)
+    })
   }
 
   generateDataUriJson = () => {
-    const { projectId: id } = this.props
-    this.setState({ loading: true })
-    fetchProjectInfo({ id })
-      .then(({ icons }) => {
-        return JSON.stringify(
-          icons.reduce<{ [key: string]: string }>((res, icon) => {
-            res[icon.font_class] = svgToMiniDataURI(minifySVG(icon.show_svg))
-            return res
-          }, {}),
-          null,
-          2
-        )
+    this.runGenerator(async () => {
+      const { projectId: id } = this.props
+      const { icons } = await fetchProjectInfo({ id })
+      const json = JSON.stringify(
+        icons.reduce<{ [key: string]: string }>((res, icon) => {
+          res[icon.font_class] = svgToMiniDataURI(minifySVG(icon.show_svg))
+          return res
+        }, {}),
+        null,
+        2,
+      )
+      this.setState({
+        dialog: {
+          visible: true,
+          title: 'JSON 代码',
+          code: json,
+          html: dedent`
+            <pre class="language-json">${
+              Prism.highlight(json, Prism.languages.json)
+            }</pre>
+          `,
+        },
       })
-      .then(json => {
-        this.setState({
-          dialog: {
-            visible: true,
-            title: 'JSON 代码',
-            code: json,
-            html: dedent`
-              <pre class="language-json">${
-                Prism.highlight(json, Prism.languages.json)
-              }</pre>
-            `,
-          },
-        })
-      })
-      .finally(() => {
-        (document.activeElement as HTMLButtonElement).blur()
-        this.setState({ loading: false })
-      })
+    })
   }
 
   generateCSSSprite = () => {
-    const { projectId: id } = this.props
-    const { cssSprite } = this.state.config
-    const size = +cssSprite.size
-    this.setState({ loading: true })
-    fetchProjectInfo({ id })
-      .then(({ project, icons }) => {
-        return makeCSSSprite({
-          icons: icons.reduce((res, icon) => {
-            res[icon.font_class] = icon.show_svg
-            return res
-          }, {} as any),
-          format: cssSprite.format,
-          quality: cssSprite.quality,
-          iconSize: size,
-          gap: 3,
-        }).then(([icons, dataUri]) => {
-          const css = dedent`
-            .${project.font_family} {
-              background: url("${dataUri}") no-repeat top left;
-              background-size: 1em auto;
-              width: 1em;
-              height: 1em;
-            }
+    this.runGenerator(async () => {
+      const { projectId: id } = this.props
+      const { cssSprite } = this.state.config
+      const { project, icons } = await fetchProjectInfo({ id })
+      const { positions, dataUri } = await makeCSSSprite({
+        icons: icons.reduce((res, icon) => {
+          res[icon.font_class] = icon.show_svg
+          return res
+        }, {} as any),
+        format: cssSprite.format,
+        quality: cssSprite.quality,
+        iconSize: cssSprite.size,
+        gap: 3,
+      })
+      const css = dedent`
+        .${project.font_family} {
+          background: url("${dataUri}") no-repeat top left;
+          background-size: 1em auto;
+          width: 1em;
+          height: 1em;
+        }
 
-            ${icons.map(({ name, y }) => dedent`
-              .${project.prefix}${name} {
-                background-position: 0 -${(y / size).toFixed(4)}em;
-              }
-            `).join('\n\n')}
+        ${positions.map(({ name, y }) => dedent`
+          .${project.prefix}${name} {
+            background-position: 0 -${(y / cssSprite.size).toFixed(4)}em;
+          }
+        `).join('\n\n')}
+      `
+      this.setState({
+        dialog: {
+          visible: true,
+          title: 'CSS 代码',
+          code: css,
+          html: dedent`
+            <pre class="language-css">${
+              Prism.highlight(css, Prism.languages.css)
+            }</pre>
+          `,
+        },
+      })
+    })
+  }
+
+  generateReactComponents = () => {
+    this.runGenerator(async () => {
+      const { projectId: id } = this.props
+      const { project, icons } = await fetchProjectInfo({ id })
+      const iconPropsTypeName = `I${pascalCase(project.prefix)}Props`
+      const code = dedent`
+        import React from 'react'
+
+        export interface ${iconPropsTypeName} {
+          className?: string,
+          style?: React.CSSProperties,
+          onClick?: React.MouseEventHandler<SVGSVGElement>,
+        }
+
+        ${icons.map(icon => {
+          const componentName = pascalCase(`${project.prefix}_${icon.font_class}`)
+          return dedent`
+            export const ${componentName}: React.forwardRef<HTMLSpanElement, ${iconPropsTypeName}>((props, ref) => {
+              return (
+                ${icon.show_svg}
+              )
+            })
+            componentName.displayName = '${componentName}'
           `
-          this.setState({
-            dialog: {
-              visible: true,
-              title: 'CSS 代码',
-              code: css,
-              html: dedent`
-                <pre class="language-css">${
-                  Prism.highlight(css, Prism.languages.css)
-                }</pre>
-              `,
-            },
-          })
-        })
+        }).join('\n\n')}
+      `
+      this.setState({
+        dialog: {
+          visible: true,
+          title: '组件代码',
+          code: code,
+          html: dedent`
+            <pre class="language-typescript">${
+              Prism.highlight(code, Prism.languages.typescript)
+            }</pre>
+          `,
+        },
       })
-      .finally(() => {
-        (document.activeElement as HTMLButtonElement).blur()
-        this.setState({ loading: false })
-      })
+    })
   }
 
   closeDialog = () => {
@@ -310,8 +320,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
               <XButton
                 icon='typescript'
                 className={_.action}
-                onClick={this.generateTSDefinition}
-                right={
+                right={(
                   <XConfig
                     value={ts}
                     config={[
@@ -324,17 +333,17 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
                           { label: '否', value: false },
                         ],
                       },
-                    ] as ConfigOptions}
+                    ] as IConfigOptions}
                     onChange={(key, value) => this.updateConfig('ts', key as any, value)}
                   />
-                }>
+                )}
+                onClick={this.generateTSDefinition}>
                 生成图标名称的 TS 定义
               </XButton>
               <XButton
                 icon='pack'
                 className={_.action}
-                onClick={this.generateSVGZip}
-                right={
+                right={(
                   <XConfig
                     value={svgZip}
                     config={[
@@ -347,17 +356,17 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
                           { label: '否', value: false },
                         ],
                       },
-                    ] as ConfigOptions}
+                    ] as IConfigOptions}
                     onChange={(key, value) => this.updateConfig('svgZip', key as any, value)}
                   />
-                }>
+                )}
+                onClick={this.generateSVGZip}>
                 打包下载 SVG 图标
               </XButton>
               <XButton
                 icon='sprite'
                 className={_.action}
-                onClick={this.generateCSSSprite}
-                right={
+                right={(
                   <XConfig
                     value={cssSprite}
                     config={[
@@ -372,11 +381,18 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
                       },
                       { name: 'size', title: '雪碧图上图标的大小(像素，仅对 PNG 格式有效)', type: 'number', min: 0, step: 16 },
                       { name: 'quality', title: '生成的雪碧图质量(仅对 PNG 格式有效)', type: 'number', min: 0, max: 100, step: 10 },
-                    ] as ConfigOptions}
+                    ] as IConfigOptions}
                     onChange={(key, value) => this.updateConfig('cssSprite', key as any, value)}
                   />
-                }>
+                )}
+                onClick={this.generateCSSSprite}>
                 生成雪碧图 CSS
+              </XButton>
+              <XButton
+                icon='unit'
+                className={_.action}
+                onClick={this.generateReactComponents}>
+                生成 React 图标组件
               </XButton>
               <XButton
                 icon='weapp'
@@ -396,14 +412,14 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         <XDialog
           title={dialog.title}
           visible={dialog.visible}
-          onVisibleChange={this.closeDialog}
-          footer={
+          footer={(
             <CopyToClipboard
               text={dialog.code}
               onCopy={() => message.success('代码复制成功')}>
               <Button>复制代码</Button>
             </CopyToClipboard>
-          }>
+          )}
+          onVisibleChange={this.closeDialog}>
           <div dangerouslySetInnerHTML={{ __html: dialog.html }} />
         </XDialog>
       </div>
@@ -423,12 +439,14 @@ window.addEventListener('load', () => {
         listEl.appendChild(_forgerEl)
         ReactDom.render(
           <Forger projectId={projectId} />,
-          _forgerEl
+          _forgerEl,
         )
-      } else {
+      }
+      else {
         forgerEl.style.display = 'block'
       }
-    } else {
+    }
+    else {
       if (forgerEl) {
         forgerEl.style.display = 'none'
       }

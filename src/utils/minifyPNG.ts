@@ -9,7 +9,7 @@ function dataURLtoUint8(dataurl: string) {
   return u8arr
 }
 
-export default function minifyPNG(dataurl: string, quality: number): Promise<string> {
+export function minifyPNG(dataurl: string, quality: number): Promise<string> {
   return new Promise(resolve => {
     const result = (window as any).pngquant(dataURLtoUint8(dataurl), {
       quality: `${Math.max(0, quality - 20)}-${Math.min(100, quality + 20)}`,
