@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.5.0"></a>
+# [1.5.0](https://github.com/fjc0k/Iconfonter/compare/v1.4.4...v1.5.0) (2020-03-25)
+
+
+### Bug Fixes
+
+* assets/Common.js 不是一个 UTF-8 文件 ([7ecb40c](https://github.com/fjc0k/Iconfonter/commit/7ecb40c))
+
+
+### Features
+
+* 代码重构 ([8b0fd03](https://github.com/fjc0k/Iconfonter/commit/8b0fd03))
+* 代码重构 ([8a39cce](https://github.com/fjc0k/Iconfonter/commit/8a39cce))
+* 完善文档 ([ff521f9](https://github.com/fjc0k/Iconfonter/commit/ff521f9))
+* 完成生成 React 图标组件功能 ([e9dc06a](https://github.com/fjc0k/Iconfonter/commit/e9dc06a))
+* 打赏作者 ([a0d4929](https://github.com/fjc0k/Iconfonter/commit/a0d4929))
+* 格式化代码 ([fd26533](https://github.com/fjc0k/Iconfonter/commit/fd26533))
+* 生成雪碧图 CSS ([010c4e3](https://github.com/fjc0k/Iconfonter/commit/010c4e3))
+
+
+
 <a name="1.4.4"></a>
 ## [1.4.4](https://github.com/fjc0k/Iconfonter/compare/v1.4.3...v1.4.4) (2019-10-09)
 
