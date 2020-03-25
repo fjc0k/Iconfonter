@@ -1,26 +1,21 @@
 /* eslint-disable react/jsx-handler-names */
 import 'antd/lib/style/components.less'
-import 'prismjs/components/prism-json'
-import 'prismjs/components/prism-typescript'
-import 'prismjs/themes/prism-tomorrow.css'
 import _ from './Project.module.less'
 import base64 from 'base64-js'
-import CopyToClipboard from 'react-copy-to-clipboard'
 import FileSaver from 'file-saver'
 import JSZip from 'jszip'
-import Prism from 'prismjs'
 import qs from 'qs'
 import React from 'react'
 import ReactDom from 'react-dom'
 import svgToMiniDataURI from 'mini-svg-data-uri'
-import { Button, message, Spin } from 'antd'
 import { createCdnFiles, fetchFile, fetchProjectInfo } from '../../api'
-import { dedent } from 'vtils'
+import { dedent, PartialBy } from 'vtils'
 import { EasyStorage, EasyStorageAdapterBrowserLocalStorage } from 'vtils'
 import { IConfigOptions } from '../../components/Config'
 import { makeCSSSprite, minifySVG } from '../../utils'
 import { pascalCase } from 'change-case'
-import { XButton, XConfig, XDialog } from '../../components'
+import { Spin } from 'antd'
+import { XButton, XConfig, XDialog, XDialogCodeProps } from '../../components'
 
 const storage = new EasyStorage<{
   forger: ForgerState,
@@ -32,12 +27,7 @@ interface ForgerProps {
 
 interface ForgerState {
   loading: boolean,
-  dialog: {
-    visible: boolean,
-    title: string,
-    code: string,
-    html: string,
-  },
+  codeDialog: PartialBy<XDialogCodeProps, 'onVisibleChange'>,
   config: {
     ts: {
       withPrefix: boolean,
@@ -58,12 +48,9 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
     super(props)
     this.state = {
       loading: false,
-      dialog: {
+      codeDialog: {
         visible: false,
-        title: '',
-        code: '',
-        html: '',
-      },
+      } as any,
       config: {
         ts: {
           withPrefix: false,
@@ -114,15 +101,12 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         )
         .join(' | ')
       this.setState({
-        dialog: {
+        codeDialog: {
           visible: true,
           title: 'TS 代码',
+          language: 'typescript',
           code: definition,
-          html: `
-            <pre class="language-typescript wrap">${
-              Prism.highlight(definition, Prism.languages.typescript)
-            }</pre>
-          `,
+          wrap: true,
         },
       })
     })
@@ -157,15 +141,11 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         `).join('\n\n')}
       `
       this.setState({
-        dialog: {
+        codeDialog: {
           visible: true,
           title: 'CSS 代码',
+          language: 'css',
           code: css,
-          html: dedent`
-              <pre class="language-css">${
-                Prism.highlight(css, Prism.languages.css)
-              }</pre>
-            `,
         },
       })
     })
@@ -204,15 +184,11 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         2,
       )
       this.setState({
-        dialog: {
+        codeDialog: {
           visible: true,
           title: 'JSON 代码',
+          language: 'json',
           code: json,
-          html: dedent`
-            <pre class="language-json">${
-              Prism.highlight(json, Prism.languages.json)
-            }</pre>
-          `,
         },
       })
     })
@@ -248,15 +224,11 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         `).join('\n\n')}
       `
       this.setState({
-        dialog: {
+        codeDialog: {
           visible: true,
           title: 'CSS 代码',
+          language: 'css',
           code: css,
-          html: dedent`
-            <pre class="language-css">${
-              Prism.highlight(css, Prism.languages.css)
-            }</pre>
-          `,
         },
       })
     })
@@ -266,22 +238,37 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
     this.runGenerator(async () => {
       const { projectId: id } = this.props
       const { project, icons } = await fetchProjectInfo({ id })
-      const iconPropsTypeName = `I${pascalCase(project.prefix)}Props`
+      const wrapperName = `${pascalCase(project.prefix)}WrapperComponent`
+      const wrapperPropsTypeName = `${pascalCase(project.prefix)}WrapperComponentProps`
+      const iconPropsTypeName = `${pascalCase(project.prefix)}Props`
       const code = dedent`
         import React from 'react'
 
-        export interface ${iconPropsTypeName} {
-          className?: string,
-          style?: React.CSSProperties,
-          onClick?: React.MouseEventHandler<SVGSVGElement>,
-        }
+        export interface ${wrapperPropsTypeName} extends React.ComponentProps<'span'> {}
+
+        export const ${wrapperName} = React.forwardRef<HTMLSpanElement, ${wrapperPropsTypeName}>((props, ref) => {
+          return (
+            <span
+              role='img'
+              {...props}
+              ref={ref}
+              className={\`\${props.className || ''}\`}
+            />
+          )
+        })
+        ${wrapperName}.displayName = '${wrapperName}'
+
+        export interface ${iconPropsTypeName} extends ${wrapperPropsTypeName} {}
 
         ${icons.map(icon => {
           const componentName = pascalCase(`${project.prefix}_${icon.font_class}`)
           return dedent`
+            // ${icon.font_class}
             export const ${componentName}: React.forwardRef<HTMLSpanElement, ${iconPropsTypeName}>((props, ref) => {
               return (
-                ${icon.show_svg}
+                <${wrapperName} {...props} ref={ref}>
+                  ${icon.show_svg}
+                </${wrapperName}>
               )
             })
             componentName.displayName = '${componentName}'
@@ -289,15 +276,11 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         }).join('\n\n')}
       `
       this.setState({
-        dialog: {
+        codeDialog: {
           visible: true,
           title: '组件代码',
+          language: 'typescript',
           code: code,
-          html: dedent`
-            <pre class="language-typescript">${
-              Prism.highlight(code, Prism.languages.typescript)
-            }</pre>
-          `,
         },
       })
     })
@@ -305,13 +288,13 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
 
   closeDialog = () => {
     this.setState(prevState => {
-      prevState.dialog.visible = false
+      prevState.codeDialog.visible = false
       return prevState
     })
   }
 
   render() {
-    const { config: { ts, svgZip, cssSprite }, dialog } = this.state
+    const { config: { ts, svgZip, cssSprite }, codeDialog: dialog } = this.state
     return (
       <div>
         <Spin spinning={this.state.loading}>
@@ -409,19 +392,10 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
             </div>
           </div>
         </Spin>
-        <XDialog
-          title={dialog.title}
-          visible={dialog.visible}
-          footer={(
-            <CopyToClipboard
-              text={dialog.code}
-              onCopy={() => message.success('代码复制成功')}>
-              <Button>复制代码</Button>
-            </CopyToClipboard>
-          )}
-          onVisibleChange={this.closeDialog}>
-          <div dangerouslySetInnerHTML={{ __html: dialog.html }} />
-        </XDialog>
+        <XDialog.Code
+          {...dialog}
+          onVisibleChange={this.closeDialog}
+        />
       </div>
     )
   }

@@ -1,5 +1,8 @@
 import _ from './index.module.less'
+import CopyToClipboard from 'react-copy-to-clipboard'
 import React, { useCallback } from 'react'
+import { Button, message } from 'antd'
+import { XCode, XCodeProps } from '../Code'
 import { XIcon } from '../Icon'
 
 export interface XDialogProps {
@@ -35,5 +38,25 @@ export function XDialog(props: XDialogProps) {
         />
       </div>
     </div>
+  )
+}
+
+export interface XDialogCodeProps extends XDialogProps, XCodeProps {
+
+}
+
+XDialog.Code = function (props: XDialogCodeProps) {
+  return (
+    <XDialog
+      {...props}
+      footer={(
+        <CopyToClipboard
+          text={props.code}
+          onCopy={() => message.success('代码复制成功')}>
+          <Button>复制代码</Button>
+        </CopyToClipboard>
+      )}>
+      <XCode {...props} />
+    </XDialog>
   )
 }
