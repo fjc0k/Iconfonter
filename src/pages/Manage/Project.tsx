@@ -13,7 +13,7 @@ import { createCdnFiles, fetchFile, fetchProjectInfo } from '../../api'
 import { dedent, PartialBy } from 'vtils'
 import { Divider, Spin } from 'antd'
 import { EasyStorage, EasyStorageAdapterBrowserLocalStorage } from 'vtils'
-import { formatCode, makeCSSSprite, minifySVG } from '../../utils'
+import { formatCode, makeCSSSprite, minifySVG, parseSVG } from '../../utils'
 import { IConfigOptions } from '../../components/Config'
 import { pascalCase } from 'change-case'
 import { XButton, XConfig, XDialog, XDialogCodeProps } from '../../components'
@@ -256,14 +256,20 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         import React from 'react'
 
         ${reactComponents.kind !== 'ts' ? '' : dedent`
-          export interface ${wrapperPropsTypeName} extends React.ComponentProps<'span'> {}
+          interface ${wrapperPropsTypeName} extends React.ComponentProps<'span'> {
+            iconName: string,
+            svgViewBox: string,
+            svgPaths: React.ReactNode,
+          }
         `}
 
-        export const ${wrapperName} = React.forwardRef${reactComponents.kind !== 'ts' ? '' : `<HTMLSpanElement, ${wrapperPropsTypeName}>`}((props, ref) => {
+        const ${wrapperName} = React.forwardRef${reactComponents.kind !== 'ts' ? '' : `<HTMLSpanElement, ${wrapperPropsTypeName}>`}((props, ref) => {
+          const { iconName, svgViewBox, svgPaths, className, ...restProps } = props
           return (
             <span
               role='img'
-              {...props}
+              aria-label={iconName}
+              {...restProps}
               ref={ref}
               className={\`${
                 reactComponents.className
@@ -271,27 +277,45 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
                   : ''
               }${
                 reactComponents.className
-                  ? '${props.className ? ` ${props.className}` : \'\'}'
-                  : '${props.className || \'\'}'
-              }\`}
-            />
+                  ? '${className ? ` ${className}` : \'\'}'
+                  : '${className || \'\'}'
+              }\`}>
+              <svg
+                viewBox={svgViewBox}
+                width='1em'
+                height='1em'
+                fill='currentColor'
+                data-icon={iconName}
+                aria-hidden='true'>
+                {svgPaths}
+              </svg>
+            </span>
           )
         })
         ${wrapperName}.displayName = '${wrapperName}'
 
         ${reactComponents.kind !== 'ts' ? '' : dedent`
-          export interface ${iconPropsTypeName} extends ${wrapperPropsTypeName} {}
+          export interface ${iconPropsTypeName} extends React.ComponentProps<'span'> {}
         `}
 
         ${icons.map(icon => {
           const componentName = pascalCase(`${project.prefix}_${icon.font_class}`)
+          const svgInfo = parseSVG(icon.show_svg)
           return dedent`
             // ${icon.font_class}
             export const ${componentName} = React.forwardRef${reactComponents.kind !== 'ts' ? '' : `<HTMLSpanElement, ${iconPropsTypeName}>`}((props, ref) => {
               return (
-                <${wrapperName} {...props} ref={ref}>
-                  ${icon.show_svg}
-                </${wrapperName}>
+                <${wrapperName}
+                  {...props}
+                  ref={ref}
+                  iconName={\`${icon.font_class}\`}
+                  svgViewBox={\`${svgInfo.viewBox}\`}
+                  svgPaths={(
+                    <React.Fragment>
+                      ${svgInfo.paths}
+                    </React.Fragment>
+                  )}
+                />
               )
             })
             ${componentName}.displayName = '${componentName}'
@@ -302,7 +326,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         codeDialog: {
           visible: true,
           title: '组件代码',
-          language: 'typescript',
+          language: 'tsx',
           code: formatCode({
             language: reactComponents.kind === 'ts' ? 'typescript' : 'javascript',
             code: code,
@@ -320,7 +344,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
   }
 
   render() {
-    const { config: { ts, svgZip, cssSprite, reactComponents }, codeDialog: dialog, sponsorDialogVisible } = this.state
+    const { config: { ts, svgZip, cssSprite, reactComponents }, codeDialog, sponsorDialogVisible } = this.state
     return (
       <div className={_.container}>
         <Spin spinning={this.state.loading}>
@@ -470,7 +494,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
           </XDialog>
         </div>
         <XDialog.Code
-          {...dialog}
+          {...codeDialog}
           onVisibleChange={this.closeDialog}
         />
       </div>

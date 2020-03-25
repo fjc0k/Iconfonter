@@ -3,4 +3,5 @@ export * from './formatCode'
 export * from './makeCSSSprite'
 export * from './minifyPNG'
 export * from './minifySVG'
+export * from './parseSVG'
 // @endindex

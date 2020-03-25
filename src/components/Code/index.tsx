@@ -3,6 +3,8 @@ import Prism from 'prismjs'
 
 import 'prismjs/components/prism-css'
 import 'prismjs/components/prism-json'
+import 'prismjs/components/prism-jsx'
+import 'prismjs/components/prism-tsx'
 import 'prismjs/components/prism-typescript'
 import 'prismjs/themes/prism-tomorrow.css'
 
@@ -10,7 +12,7 @@ import _ from './index.module.less'
 import React, { useMemo } from 'react'
 
 export interface XCodeProps {
-  language: 'css' | 'json' | 'typescript',
+  language: 'css' | 'json' | 'typescript' | 'tsx',
   code: string,
   wrap?: boolean,
 }
@@ -26,7 +28,7 @@ export function XCode(props: XCodeProps) {
   return (
     <pre
       dangerouslySetInnerHTML={{ __html: highlightedCode }}
-      className={`language-${props.language} ${props.wrap && _.wrap}`}
+      className={`language-${props.language} line-numbers ${props.wrap && _.wrap}`}
     />
   )
 }

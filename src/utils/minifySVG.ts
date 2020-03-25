@@ -5,6 +5,7 @@ export function minifySVG<T>(svg: string, extraAttrs?: { [key: string]: string }
   svgNode.removeAttribute('class')
   svgNode.removeAttribute('style')
   svgNode.removeAttribute('version')
+  svgNode.removeAttribute('xmlns')
   if (extraAttrs) {
     Object.keys(extraAttrs).forEach(key => {
       svgNode.setAttribute(key, extraAttrs[key])
