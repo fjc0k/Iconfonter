@@ -862,16 +862,24 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react-dom@^16.0.10":
-  version "16.0.10"
-  resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-16.0.10.tgz#0c8980a639fa1d92a8547c8b6d0cf47af96c8966"
+"@types/react-dom@^16.9.5":
+  version "16.9.5"
+  resolved "https://registry.npm.taobao.org/@types/react-dom/download/@types/react-dom-16.9.5.tgz#5de610b04a35d07ffd8f44edad93a71032d9aaa7"
+  integrity sha1-XeYQsEo10H/9j0TtrZOnEDLZqqc=
   dependencies:
-    "@types/node" "*"
     "@types/react" "*"
 
-"@types/react@*", "@types/react@^16.7.7":
+"@types/react@*":
   version "16.7.7"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-16.7.7.tgz#1e5e23e7dd922968ed4b484cdec00a5402c9f31b"
+  dependencies:
+    "@types/prop-types" "*"
+    csstype "^2.2.0"
+
+"@types/react@^16.9.25":
+  version "16.9.25"
+  resolved "https://registry.npm.taobao.org/@types/react/download/@types/react-16.9.25.tgz#6ae2159b40138c792058a23c3c04fd3db49e929e"
+  integrity sha1-auIVm0ATjHkgWKI8PAT9PbSekp4=
   dependencies:
     "@types/prop-types" "*"
     csstype "^2.2.0"
@@ -6141,9 +6149,10 @@ pkg-dir@^3.0.0:
   dependencies:
     find-up "^3.0.0"
 
-poi@^11.0.0-beta.6:
+poi@11.0.0-beta.6:
   version "11.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/poi/-/poi-11.0.0-beta.6.tgz#9db46b985555ee26a84efea470efcdd2a4b90d08"
+  resolved "https://registry.npm.taobao.org/poi/download/poi-11.0.0-beta.6.tgz#9db46b985555ee26a84efea470efcdd2a4b90d08"
+  integrity sha1-nbRrmFVV7iaoTv6kcO/N0qS5DQg=
   dependencies:
     "@babel/core" "^7.0.0"
     "@babel/plugin-proposal-class-properties" "^7.0.0"

@@ -3,16 +3,21 @@
 :global {
   .project-iconlist {
     display: flex;
+
     .block-icon-list {
       flex-grow: 1;
-      + * {
+
+      +* {
         flex-shrink: 0;
       }
     }
   }
-  *[class^="ant-"], *[class*=" ant-"] {
+
+  *[class^="ant-"],
+  *[class*=" ant-"] {
     box-sizing: border-box;
   }
+
   input::selection {
     background-color: red;
     color: #fff;
@@ -23,24 +28,52 @@
   background: #eee;
   padding: 14px;
   border-radius: 4px;
-  .actions {
+
+  .container {
+    height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 2px;
-    .action {
-      text-align: left;
-      &:not(:first-child) {
-        margin-top: 15px;
-      }
-      &:global(.ant-dropdown-button) {
-        display: flex;
-        > :global(.ant-btn):first-child {
-          flex-grow: 1;
-          text-align: left;
+    justify-content: space-between;
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      padding: 2px;
+
+      .action {
+        text-align: left;
+
+        &:not(:first-child) {
+          margin-top: 15px;
+        }
+
+        &:global(.ant-dropdown-button) {
+          display: flex;
+
+          > :global(.ant-btn):first-child {
+            flex-grow: 1;
+            text-align: left;
+          }
+        }
+
+        .icon {
+          margin-right: 4px;
         }
       }
-      .icon {
-        margin-right: 4px;
+    }
+
+    .links {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+
+      .divider {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+
+      a {
+        cursor: pointer;
+        color: #999;
       }
     }
   }

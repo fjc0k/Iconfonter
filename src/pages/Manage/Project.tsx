@@ -8,13 +8,14 @@ import qs from 'qs'
 import React from 'react'
 import ReactDom from 'react-dom'
 import svgToMiniDataURI from 'mini-svg-data-uri'
+import { config } from '../../config'
 import { createCdnFiles, fetchFile, fetchProjectInfo } from '../../api'
 import { dedent, PartialBy } from 'vtils'
+import { Divider, Spin } from 'antd'
 import { EasyStorage, EasyStorageAdapterBrowserLocalStorage } from 'vtils'
 import { IConfigOptions } from '../../components/Config'
 import { makeCSSSprite, minifySVG } from '../../utils'
 import { pascalCase } from 'change-case'
-import { Spin } from 'antd'
 import { XButton, XConfig, XDialog, XDialogCodeProps } from '../../components'
 
 const storage = new EasyStorage<{
@@ -41,6 +42,7 @@ interface ForgerState {
       quality: number,
     },
   },
+  sponsorDialogVisible: boolean,
 }
 
 class Forger extends React.Component<ForgerProps, ForgerState> {
@@ -65,6 +67,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
         },
         ...storage.getSync('forger', {} as any),
       },
+      sponsorDialogVisible: false,
     }
   }
 
@@ -119,11 +122,10 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
       const { project, font, icons } = await fetchProjectInfo({ id })
       const file = await fetchFile({ url: font.woff_file })
       const base64String = base64.fromByteArray(new Uint8Array(file))
-      const base64UrlString = `data:font/woff;charset=utf-8;base64,${base64String}`
       const css = dedent`
         @font-face {
           font-family: "${project.font_family}";
-          src: url("${base64UrlString}") format("woff");
+          src: url("data:font/woff;charset=utf-8;base64,${base64String}") format("woff");
         }
 
         .${project.font_family} {
@@ -294,9 +296,9 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
   }
 
   render() {
-    const { config: { ts, svgZip, cssSprite }, codeDialog: dialog } = this.state
+    const { config: { ts, svgZip, cssSprite }, codeDialog: dialog, sponsorDialogVisible } = this.state
     return (
-      <div>
+      <div className={_.container}>
         <Spin spinning={this.state.loading}>
           <div>
             <div className={_.actions}>
@@ -392,6 +394,28 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
             </div>
           </div>
         </Spin>
+        <div className={_.links}>
+          <a href={config.repository} target='_blank'>
+            开源仓库
+          </a>
+          <Divider type='vertical' className={_.divider} />
+          <a href={config.feedback} target='_blank'>
+            建议反馈
+          </a>
+          <Divider type='vertical' className={_.divider} />
+          <a onClick={() => this.setState({ sponsorDialogVisible: true })}>
+            打赏作者
+          </a>
+          <XDialog
+            title='打赏作者'
+            visible={sponsorDialogVisible}
+            onVisibleChange={sponsorDialogVisible => this.setState({ sponsorDialogVisible })}>
+            <Divider>支付宝</Divider>
+            <img style={{ width: 200 }} referrerPolicy='no-referrer' src={config.sponsor.alipay} />
+            <Divider>微信</Divider>
+            <img style={{ width: 200 }} referrerPolicy='no-referrer' src={config.sponsor.wechat} />
+          </XDialog>
+        </div>
         <XDialog.Code
           {...dialog}
           onVisibleChange={this.closeDialog}
