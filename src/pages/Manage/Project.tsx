@@ -13,8 +13,8 @@ import { createCdnFiles, fetchFile, fetchProjectInfo } from '../../api'
 import { dedent, PartialBy } from 'vtils'
 import { Divider, Spin } from 'antd'
 import { EasyStorage, EasyStorageAdapterBrowserLocalStorage } from 'vtils'
+import { formatCode, makeCSSSprite, minifySVG } from '../../utils'
 import { IConfigOptions } from '../../components/Config'
-import { makeCSSSprite, minifySVG } from '../../utils'
 import { pascalCase } from 'change-case'
 import { XButton, XConfig, XDialog, XDialogCodeProps } from '../../components'
 
@@ -41,6 +41,10 @@ interface ForgerState {
       size: number,
       quality: number,
     },
+    reactComponents: {
+      kind: 'ts' | 'js',
+      className: string,
+    },
   },
   sponsorDialogVisible: boolean,
 }
@@ -64,6 +68,10 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
           format: 'png',
           size: 32,
           quality: 70,
+        },
+        reactComponents: {
+          kind: 'ts',
+          className: '',
         },
         ...storage.getSync('forger', {} as any),
       },
@@ -239,6 +247,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
   generateReactComponents = () => {
     this.runGenerator(async () => {
       const { projectId: id } = this.props
+      const { config: { reactComponents } } = this.state
       const { project, icons } = await fetchProjectInfo({ id })
       const wrapperName = `${pascalCase(project.prefix)}WrapperComponent`
       const wrapperPropsTypeName = `${pascalCase(project.prefix)}WrapperComponentProps`
@@ -246,34 +255,46 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
       const code = dedent`
         import React from 'react'
 
-        export interface ${wrapperPropsTypeName} extends React.ComponentProps<'span'> {}
+        ${reactComponents.kind !== 'ts' ? '' : dedent`
+          export interface ${wrapperPropsTypeName} extends React.ComponentProps<'span'> {}
+        `}
 
-        export const ${wrapperName} = React.forwardRef<HTMLSpanElement, ${wrapperPropsTypeName}>((props, ref) => {
+        export const ${wrapperName} = React.forwardRef${reactComponents.kind !== 'ts' ? '' : `<HTMLSpanElement, ${wrapperPropsTypeName}>`}((props, ref) => {
           return (
             <span
               role='img'
               {...props}
               ref={ref}
-              className={\`\${props.className || ''}\`}
+              className={\`${
+                reactComponents.className
+                  ? reactComponents.className
+                  : ''
+              }${
+                reactComponents.className
+                  ? '${props.className ? ` ${props.className}` : \'\'}'
+                  : '${props.className || \'\'}'
+              }\`}
             />
           )
         })
         ${wrapperName}.displayName = '${wrapperName}'
 
-        export interface ${iconPropsTypeName} extends ${wrapperPropsTypeName} {}
+        ${reactComponents.kind !== 'ts' ? '' : dedent`
+          export interface ${iconPropsTypeName} extends ${wrapperPropsTypeName} {}
+        `}
 
         ${icons.map(icon => {
           const componentName = pascalCase(`${project.prefix}_${icon.font_class}`)
           return dedent`
             // ${icon.font_class}
-            export const ${componentName}: React.forwardRef<HTMLSpanElement, ${iconPropsTypeName}>((props, ref) => {
+            export const ${componentName} = React.forwardRef${reactComponents.kind !== 'ts' ? '' : `<HTMLSpanElement, ${iconPropsTypeName}>`}((props, ref) => {
               return (
                 <${wrapperName} {...props} ref={ref}>
                   ${icon.show_svg}
                 </${wrapperName}>
               )
             })
-            componentName.displayName = '${componentName}'
+            ${componentName}.displayName = '${componentName}'
           `
         }).join('\n\n')}
       `
@@ -282,7 +303,10 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
           visible: true,
           title: '组件代码',
           language: 'typescript',
-          code: code,
+          code: formatCode({
+            language: reactComponents.kind === 'ts' ? 'typescript' : 'javascript',
+            code: code,
+          }),
         },
       })
     })
@@ -296,7 +320,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
   }
 
   render() {
-    const { config: { ts, svgZip, cssSprite }, codeDialog: dialog, sponsorDialogVisible } = this.state
+    const { config: { ts, svgZip, cssSprite, reactComponents }, codeDialog: dialog, sponsorDialogVisible } = this.state
     return (
       <div className={_.container}>
         <Spin spinning={this.state.loading}>
@@ -376,6 +400,35 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
               <XButton
                 icon='unit'
                 className={_.action}
+                right={(
+                  <XConfig
+                    value={reactComponents}
+                    config={[
+                      {
+                        name: 'kind',
+                        title: '代码类型',
+                        type: 'radio',
+                        options: [
+                          {
+                            label: 'TypeScript',
+                            value: 'ts',
+                          },
+                          {
+                            label: 'JavaScript',
+                            value: 'js',
+                          },
+                        ],
+                      },
+                      {
+                        name: 'className',
+                        title: '图标类名',
+                        type: 'text',
+                        placeholder: '如: anticon',
+                      },
+                    ] as IConfigOptions}
+                    onChange={(key, value) => this.updateConfig('reactComponents', key as any, value)}
+                  />
+                )}
                 onClick={this.generateReactComponents}>
                 生成 React 图标组件
               </XButton>

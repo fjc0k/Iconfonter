@@ -1,6 +1,6 @@
 import _ from './index.module.less'
 import React from 'react'
-import { InputNumber, Popover, Radio, Slider } from 'antd'
+import { Input, InputNumber, Popover, Radio, Slider } from 'antd'
 import { XIcon } from '../Icon'
 
 export type IConfigOptions = Array<{
@@ -17,6 +17,9 @@ export type IConfigOptions = Array<{
     label: string | number,
     value: any,
   }>,
+} | {
+  type: 'text',
+  placeholder: string,
 })>
 
 export interface XConfigProps {
@@ -65,6 +68,14 @@ export function XConfig(props: XConfigProps) {
                               </Radio.Button>
                             ))}
                           </Radio.Group>
+                        )
+                      case 'text':
+                        return (
+                          <Input
+                            defaultValue={_value}
+                            placeholder={item.placeholder}
+                            onChange={e => onChange(item.name, e.target.value)}
+                          />
                         )
                       default:
                         break

@@ -30,6 +30,6 @@ module.exports = {
     },
   },
   babel: {
-    transpileModules: ['mini-svg-data-uri'],
+    transpileModules: ['mini-svg-data-uri', 'prettier'],
   },
 }
