@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.5.1"></a>
+## [1.5.1](https://github.com/fjc0k/Iconfonter/compare/v1.5.0...v1.5.1) (2022-07-26)
+
+
+### Bug Fixes
+
+* 生成内联 CSS 接口更新 ([7063a94](https://github.com/fjc0k/Iconfonter/commit/7063a94))
+
+
+
 <a name="1.5.0"></a>
 # [1.5.0](https://github.com/fjc0k/Iconfonter/compare/v1.4.4...v1.5.0) (2020-03-25)
 
