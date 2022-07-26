@@ -84,11 +84,11 @@ export function fetchProjectInfo({ id }: { id: number }): Promise<{
   })
 }
 
-export function createCdnFiles({ id }: { id: number }) {
+export function fetchProjectZip({ id }: { id: number }) {
   return request({
-    url: 'project/cdn.json',
-    method: 'POST',
-    responseDataType: 'json',
+    url: 'project/download.zip',
+    method: 'GET',
+    responseDataType: 'arraybuffer',
     data: {
       pid: id,
     },

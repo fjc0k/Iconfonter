@@ -9,10 +9,10 @@ import React from 'react'
 import ReactDom from 'react-dom'
 import svgToMiniDataURI from 'mini-svg-data-uri'
 import { config } from '../../config'
-import { createCdnFiles, fetchFile, fetchProjectInfo } from '../../api'
 import { dedent, PartialBy } from 'vtils'
 import { Divider, Spin } from 'antd'
 import { EasyStorage, EasyStorageAdapterBrowserLocalStorage } from 'vtils'
+import { fetchProjectInfo, fetchProjectZip } from '../../api'
 import { formatCode, makeCSSSprite, minifySVG, parseSVG } from '../../utils'
 import { IConfigOptions } from '../../components/Config'
 import { pascalCase } from 'change-case'
@@ -126,10 +126,13 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
   generateWeappCSS = () => {
     this.runGenerator(async () => {
       const { projectId: id } = this.props
-      await createCdnFiles({ id })
-      const { project, font, icons } = await fetchProjectInfo({ id })
-      const file = await fetchFile({ url: font.woff_file })
-      const base64String = base64.fromByteArray(new Uint8Array(file))
+      const projectZip = await fetchProjectZip({ id })
+      const zip = new JSZip()
+      await zip.loadAsync(projectZip)
+      const [woffFile] = zip.file(/\.woff$/)
+      const woffFileArray = await woffFile.async('uint8array')
+      const { project, icons } = await fetchProjectInfo({ id })
+      const base64String = base64.fromByteArray(woffFileArray)
       const css = dedent`
         @font-face {
           font-family: "${project.font_family}";
@@ -351,6 +354,12 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
           <div>
             <div className={_.actions}>
               <XButton
+                icon='weapp'
+                className={_.action}
+                onClick={this.generateWeappCSS}>
+                生成内联 CSS
+              </XButton>
+              <XButton
                 icon='typescript'
                 className={_.action}
                 right={(
@@ -455,12 +464,6 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
                 )}
                 onClick={this.generateReactComponents}>
                 生成 React 图标组件
-              </XButton>
-              <XButton
-                icon='weapp'
-                className={_.action}
-                onClick={this.generateWeappCSS}>
-                生成小程序 CSS
               </XButton>
               <XButton
                 icon='json'

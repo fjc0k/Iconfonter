@@ -8,8 +8,8 @@
 
 - [安装](#安装)
 - [功能](#功能)
+  - [生成内联 CSS](#生成内联-css)
   - [生成 React 图标组件](#生成-react-图标组件)
-  - [生成小程序 CSS](#生成小程序-css)
   - [生成雪碧图 CSS](#生成雪碧图-css)
   - [生成项目图标名称的 TypeScript 类型定义](#生成项目图标名称的-typescript-类型定义)
   - [打包下载项目 SVG 图标](#打包下载项目-svg-图标)
@@ -28,13 +28,13 @@
 
 ## 功能
 
+### 生成内联 CSS
+
+<img src="https://tva1.sinaimg.cn/mw690/007RpWsxgy1gd6dpa8vgtj30ec0cl3yk" width="400" />
+
 ### 生成 React 图标组件
 
 <img src="https://tva1.sinaimg.cn/mw690/007RpWsxgy1gd6dvpub1wj30e90c3q2y" width="400" />
-
-### 生成小程序 CSS
-
-<img src="https://tva1.sinaimg.cn/mw690/007RpWsxgy1gd6dpa8vgtj30ec0cl3yk" width="400" />
 
 ### 生成雪碧图 CSS
 
