@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.6.0"></a>
+# [1.6.0](https://github.com/fjc0k/Iconfonter/compare/v1.5.1...v1.6.0) (2025-11-08)
+
+
+### Features
+
+* 升级到 manifest_version v3 ([12ca830](https://github.com/fjc0k/Iconfonter/commit/12ca830))
+
+
+
 <a name="1.5.1"></a>
 ## [1.5.1](https://github.com/fjc0k/Iconfonter/compare/v1.5.0...v1.5.1) (2022-07-26)
 
