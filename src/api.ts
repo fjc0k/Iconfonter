@@ -1,53 +1,42 @@
 import cookie from 'js-cookie'
-import { BackgroundRequest } from './background'
-import { isPlainObject, isString } from 'vtils'
 
 const baseUrl = `${location.protocol}//${location.host}/api/`
 
-const request = (options: {
+const request = async (options: {
   url: string,
   method: 'GET' | 'POST',
   data?: Record<string, any>,
   responseDataType?: 'json' | 'arraybuffer',
 }) => {
-  return new Promise(resolve => {
-    let url = /^(http)?s?:?\/\//i.test(options.url)
-      ? options.url
-      : `${baseUrl}${options.url}`
-    if (!url.startsWith('http')) {
-      url = location.protocol + url
-    }
-    const data = {
-      ...(options.data || {}),
-      ctoken: cookie.get('ctoken'),
-      t: new Date().getTime(),
-    }
-    chrome.runtime.sendMessage(
-      {
-        type: 'httpRequest',
-        options: {
-          url: url + (options.method === 'GET' ? `?${new URLSearchParams(data as any).toString()}` : ''),
-          method: options.method,
-          responseIsFile: options.responseDataType === 'arraybuffer',
-          body: options.method === 'GET'
-            ? undefined
-            : JSON.stringify(data),
-          headers: options.method === 'GET' ? {} : {
-            'Content-Type': 'application/json',
-          },
-        },
-      } as any as BackgroundRequest,
-      resolve,
-    )
-  }).then(async (data: any) => {
-    if (isPlainObject(data)) {
-      return data.data || data
-    }
-    if (isString(data) && data.startsWith('blob:')) {
-      data = await fetch(data).then(res => res.arrayBuffer())
-    }
-    return data
+  let url = /^(http)?s?:?\/\//i.test(options.url)
+    ? options.url
+    : `${baseUrl}${options.url}`
+  if (!url.startsWith('http')) {
+    url = location.protocol + url
+  }
+  const data = {
+    ...(options.data || {}),
+    ctoken: cookie.get('ctoken'),
+    t: new Date().getTime(),
+  }
+
+  const res = await fetch(url + (options.method === 'GET' ? `?${new URLSearchParams(data as any).toString()}` : ''), {
+    method: options.method,
+    body: options.method === 'GET'
+      ? undefined
+      : JSON.stringify(data),
+    headers: options.method === 'GET' ? {} : {
+      'Content-Type': 'application/json',
+    },
   })
+
+  if (options.responseDataType === 'arraybuffer') {
+    const arrayBuffer = await res.arrayBuffer()
+    return arrayBuffer
+  }
+
+  const json = await res.json()
+  return json.data || json
 }
 
 export function fetchProjectInfo({ id }: { id: number }): Promise<{

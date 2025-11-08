@@ -347,7 +347,7 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
   }
 
   render() {
-    const { config: { ts, svgZip, cssSprite, reactComponents }, codeDialog, sponsorDialogVisible } = this.state
+    const { config: { ts, svgZip, cssSprite, reactComponents }, codeDialog } = this.state
     return (
       <div className={_.container}>
         <Spin spinning={this.state.loading}>
@@ -482,19 +482,6 @@ class Forger extends React.Component<ForgerProps, ForgerState> {
           <a href={config.feedback} target='_blank'>
             建议反馈
           </a>
-          <Divider type='vertical' className={_.divider} />
-          <a onClick={() => this.setState({ sponsorDialogVisible: true })}>
-            打赏作者
-          </a>
-          <XDialog
-            title='打赏作者'
-            visible={sponsorDialogVisible}
-            onVisibleChange={sponsorDialogVisible => this.setState({ sponsorDialogVisible })}>
-            <Divider>支付宝</Divider>
-            <img style={{ width: 200 }} referrerPolicy='no-referrer' src={config.sponsor.alipay} />
-            <Divider>微信</Divider>
-            <img style={{ width: 200 }} referrerPolicy='no-referrer' src={config.sponsor.wechat} />
-          </XDialog>
         </div>
         <XDialog.Code
           {...codeDialog}
